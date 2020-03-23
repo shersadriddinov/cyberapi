@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-03-21 14:27+0500\n"
+"POT-Creation-Date: 2020-03-21 17:02+0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -28,22 +28,38 @@ msgstr "Английский"
 msgid "Russian"
 msgstr "Русский"
 
-#: v1/models.py:17
+#: v1/admin.py:18 v1/admin.py:19
+msgid "Cyber Administration"
+msgstr "Администрирование Cyber"
+
+#: v1/admin.py:20
+msgid "Cyber API"
+msgstr "Cyber API"
+
+#: v1/models.py:19
 msgid "Coins earned by playing"
 msgstr "Очки полученные за игровые действия"
 
-#: v1/models.py:18
+#: v1/models.py:20
 msgid "Game Balance"
 msgstr "Игровой баланс"
 
-#: v1/models.py:25
+#: v1/models.py:27
 msgid "Coins obtained by donations"
 msgstr "Очки полученые за донат"
 
-#: v1/models.py:26
+#: v1/models.py:28
 msgid "Donate Balance"
 msgstr "Донат Баланс"
 
-#: v1/models.py:31 v1/models.py:32
+#: v1/models.py:34
+msgid "Points earned/losed by good/bad behaviour"
+msgstr "Очки полученные/потерянные за хорошее/плохое поведение"
+
+#: v1/models.py:35
+msgid "Karma"
+msgstr "Карма"
+
+#: v1/models.py:40 v1/models.py:41
 msgid "User Balance"
 msgstr "Баланс Игрока"

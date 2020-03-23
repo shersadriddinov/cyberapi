@@ -37,6 +37,7 @@ INSTALLED_APPS = [
 
 	# Installed APPS
 	'rest_framework',
+	'rest_framework.authtoken',
 
 	# Django APPS
 	'django.contrib.admin',
@@ -88,7 +89,10 @@ WSGI_APPLICATION = 'cyberAPI.wsgi.application'
 REST_FRAMEWORK = {
 	'DEFAULT_AUTHENTICATION_CLASSES': (
 		'rest_framework.authentication.TokenAuthentication',
-	)
+	),
+	'DEFAULT_PERMISSION_CLASSES': [
+			'rest_framework.permissions.IsAuthenticated',
+		]
 }
 
 DATABASES = {
