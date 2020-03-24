@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import generics
 from .serializers import *
+from .permissions import IsNewUser
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
@@ -24,6 +25,7 @@ class Auth(generics.CreateAPIView):
 	:return json with GeneralUserSerializer objects (id, username, email)
 	"""
 	serializer_class = GeneralUserSerializer()
+	permission_classes = (IsNewUser, )
 
 	def post(self, request, *args, **kwargs):
 		username = request.data.get('username', False)
