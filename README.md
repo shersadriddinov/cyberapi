@@ -82,7 +82,7 @@ use **PUT** - to update one or more fields by passing params to update in json
 <br />
 use **DELETE** - to delete user
 <br />
-http://127.0.0.1:8000/api/user/21/
+http://127.0.0.1:8000/api/user/{user id}/
 <br />
 Method: **GET**, **PUT**, **DELETE**
 <br />
