@@ -8,7 +8,5 @@ class IsNewUser(BasePermission):
 		user_key = request.META.get('HTTP_AUTHORIZATION').split(" ")[1]
 		user = User.objects.get(username='defaul_user')
 		new_user_token = Token.objects.get(user=user)
-		print(user_key)
-		print(new_user_token.key)
 		if user_key == new_user_token.key:
 			return True
