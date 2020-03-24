@@ -1,0 +1,4 @@
+deploying:
+  stage: deploy
+  script: 
+    - sudo dpl  "$CI_PROJECT_NAME" "$CI_COMMIT_MESSAGE" "$CI_COMMIT_SHA" "$CI_JOB_ID" "$CI_PROJECT_URL"  
