@@ -3,3 +3,9 @@
 ## Unreleased
 21-03-2020
 user model
+
+## Release 0.0.1
+24-03-2020
++ `NEW` create user request
++ `NEW` get, update, delete user request
++ `NEW` ger list of users
