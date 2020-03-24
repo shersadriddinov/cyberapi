@@ -9,3 +9,4 @@ user model
 + `NEW` create user request
 + `NEW` get, update, delete user request
 + `NEW` ger list of users
++ `NEW` new IsNewUser(default_user) permission added
