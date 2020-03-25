@@ -12,21 +12,25 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 
 import os
 from django.utils.translation import ugettext_lazy as _
+from dotenv import load_dotenv
+
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
+PROJECT_DIR = os.path.normpath(os.path.dirname(__file__))
+dotenv_path = os.path.join(BASE_DIR, '.env')
+load_dotenv(dotenv_path)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'b0i#vv3nww-15sm^msb3u5wwwvp6md^p8%*y$l@oim+mvk!gzv'
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = (os.getenv("DEBUG_STATUS") == "True")
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -98,11 +102,11 @@ REST_FRAMEWORK = {
 DATABASES = {
 	'default': {
 		'ENGINE': 'django.db.backends.postgresql_psycopg2',
-		'NAME': 'cyberapi',
-		'USER': 'uznews_local',
-		'PASSWORD': '2253',
-		'HOST': '127.0.0.1',
-		'PORT': '5432',
+		'NAME': os.getenv("DATABASE_NAME"),
+		'USER': os.getenv("DATABASE_USER"),
+		'PASSWORD': os.getenv("DATABASE_PASSWORD"),
+		'HOST': os.getenv("DATABASE_HOST"),
+		'PORT': os.getenv("DATABASE_PORT"),
 		'CONN_MAX_AGE': 5,
 	}
 }
@@ -157,10 +161,13 @@ STATIC_URL = '/static/'
 STATIC_ROOT = 'static-root'
 
 # Django Redis Cache
+REDIS_PORT = os.environ.get('REDIS_PORT', '6379')
+REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
+
 CACHES = {
 	"default": {
 		"BACKEND": "django_redis.cache.RedisCache",
-		"LOCATION": "redis://127.0.0.1:6379/1",
+		"LOCATION": "redis://" + str(REDIS_HOST) + ":" + str(REDIS_PORT) + "/1",
 		"OPTIONS": {
 			"CLIENT_CLASS": "django_redis.client.DefaultClient",
 			"IGNORE_EXCEPTIONS": True,
