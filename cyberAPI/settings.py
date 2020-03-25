@@ -176,4 +176,5 @@ CACHES = {
 		"KEY_PREFIX": "cyber"
 	}
 }
+
 CACHE_TTL = 60 * 10
