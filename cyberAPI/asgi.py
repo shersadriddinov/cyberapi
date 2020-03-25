@@ -8,6 +8,8 @@ https://docs.djangoproject.com/en/3.0/howto/deployment/asgi/
 """
 
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 from django.core.asgi import get_asgi_application
 
