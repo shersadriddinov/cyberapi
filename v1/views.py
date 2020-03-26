@@ -96,4 +96,4 @@ class UsersList(generics.ListAPIView):
 
 	def get_queryset(self):
 		order = self.request.query_params.get('order', '-date_joined')
-		return User.objects.filter(is_active=True).order_by(order)
+		return User.objects.filter(is_active=True, is_staff=False).order_by(order)
