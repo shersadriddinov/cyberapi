@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 class IsNewUser(BasePermission):
 	def has_permission(self, request, view):
 		user_key = request.META.get('HTTP_AUTHORIZATION').split(" ")[1]
-		user = User.objects.get(username='defaul_user')
+		user = User.objects.get(username='default_user')
 		new_user_token = Token.objects.get(user=user)
 		if user_key == new_user_token.key:
 			return True
