@@ -128,6 +128,22 @@ class UserProfile(generics.RetrieveUpdateDestroyAPIView):
 	def get_queryset(self):
 		return User.objects.filter(is_active=True)
 
+	def update(self, request, *args, **kwargs):
+		user = self.get_object()
+		username = request.data.get('username', False)
+		first_name = request.data.get('first_name', False)
+		email = request.data.get('email', False)
+		client_settings_json = request.data.get('client_settings_json', False)
+
+		user.username = username if username else user.username
+		user.first_name = first_name if first_name else user.first_name
+		user.email = email if email else user.email
+		user.profile.client_settings_json = client_settings_json if client_settings_json else user.profile.client_settings_json
+		user.save()
+
+		response = GeneralUserSerializer(user, context={"request": request})
+		return Response(response.data, status=status.HTTP_202_ACCEPTED)
+
 
 class UsersList(generics.ListAPIView):
 	"""

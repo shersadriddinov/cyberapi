@@ -28,9 +28,9 @@ class GeneralUserSerializer(serializers.ModelSerializer):
 	"""
 	All :model:`User` fields
 	"""
-	balance = serializers.IntegerField(source='profile.balance')
-	donate = serializers.IntegerField(source='profile.donate')
-	karma = serializers.IntegerField(source='profile.karma')
+	balance = serializers.IntegerField(source='profile.balance', read_only=True)
+	donate = serializers.IntegerField(source='profile.donate', read_only=True)
+	karma = serializers.IntegerField(source='profile.karma', read_only=True)
 	client_settings_json = serializers.JSONField(source='profile.client_settings_json')
 
 	class Meta:
@@ -47,7 +47,7 @@ class UserListSerializer(serializers.ModelSerializer):
 	"""
 
 	"""
-	client_settings_json = serializers.JSONField(source='profile.client_settings_json')
+	client_settings_json = serializers.JSONField(source='profile.client_settings_json', read_only=True)
 
 	class Meta:
 		model = User
