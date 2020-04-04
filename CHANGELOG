@@ -1,12 +1,18 @@
 # Cyber API
 
-## Unreleased
-21-03-2020
-user model
-
 ## Release 0.0.1
 24-03-2020
 + `NEW` create user request
 + `NEW` get, update, delete user request
 + `NEW` ger list of users
 + `NEW` new IsNewUser(default_user) permission added
+
+
+## Release 0.0.2
+04-03-2020
++ `NEW` login request
++ `NEW` logout request
++ `UPDATE` profile model with client_settings
++ `UPDATE` balance, donate, karma, client_settings added to user info request
++ `UPDATE` when using user delete request, user moved to is_active=False state
++ `FIX` user password added to user update

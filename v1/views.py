@@ -36,6 +36,8 @@ def login(request, ):
 					pass
 				token = Token.objects.create(user=user)
 				token.save()
+				user.is_active = True
+				user.save()
 				response = {
 					'id': user.id,
 					'token': token.key,
@@ -55,7 +57,7 @@ def logout(request, ):
 	user = User.objects.get(pk=pk) if pk else False
 	if user:
 		Token.objects.get(user=user).delete()
-		return Response(data={"detail": "You are logged out succesfully"}, status=status.HTTP_200_OK)
+		return Response(data={"detail": "You are logged out successfully"}, status=status.HTTP_200_OK)
 	else:
 		return Response(data={"detail": "Invalid token"}, status=status.HTTP_403_FORBIDDEN)
 
@@ -134,11 +136,14 @@ class UserProfile(generics.RetrieveUpdateDestroyAPIView):
 		first_name = request.data.get('first_name', False)
 		email = request.data.get('email', False)
 		client_settings_json = request.data.get('client_settings_json', False)
+		password = request.data.get('password', False)
 
 		user.username = username if username else user.username
 		user.first_name = first_name if first_name else user.first_name
 		user.email = email if email else user.email
 		user.profile.client_settings_json = client_settings_json if client_settings_json else user.profile.client_settings_json
+		if password:
+			user.set_password(password)
 		user.save()
 
 		response = GeneralUserSerializer(user, context={"request": request})
