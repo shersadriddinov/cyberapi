@@ -10,3 +10,11 @@ class IsNewUser(BasePermission):
 		new_user_token = Token.objects.get(user=user)
 		if user_key == new_user_token.key:
 			return True
+
+
+class IsUserTokenBelongToUser(BasePermission):
+	def has_object_permission(self, request, view, obj):
+		user_key = request.META.get('HTTP_AUTHORIZATION').split(" ")[1]
+		token = Token.objects.get(user=obj)
+		if token.key == user_key:
+			return True

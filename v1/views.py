@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import generics
 from .serializers import *
-from .permissions import IsNewUser
+from .permissions import IsNewUser, IsUserTokenBelongToUser
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
@@ -76,6 +76,7 @@ class UserProfile(generics.RetrieveUpdateDestroyAPIView):
 	:return json containing user information
 	"""
 	serializer_class = GeneralUserSerializer
+	permission_classes = (IsUserTokenBelongToUser, )
 	lookup_field = u'pk'
 
 	def get_queryset(self):
@@ -91,7 +92,7 @@ class UsersList(generics.ListAPIView):
 	:param offset - you can use it skip some number of results you already used. (optional)
 	:return json containing list of users
 	"""
-	serializer_class = GeneralUserSerializer
+	serializer_class = UserListSerializer
 	pagination_class = LimitOffsetPagination
 
 	def get_queryset(self):

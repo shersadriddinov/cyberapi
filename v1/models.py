@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.postgres.fields import JSONField
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
@@ -34,6 +35,12 @@ class Profile(models.Model):
 		blank=True,
 		help_text=_('Points earned/losed by good/bad behaviour'),
 		verbose_name=_("Karma")
+	)
+	client_settings_json = JSONField(
+		null=True,
+		blank=True,
+		verbose_name=_("Custom user setttings"),
+		help_text=_("JSON field containing user custom setttings"),
 	)
 
 	class Meta:
