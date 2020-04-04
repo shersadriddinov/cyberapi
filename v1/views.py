@@ -1,5 +1,6 @@
 from collections import namedtuple
 from django.contrib.auth.models import Group, User
+from django.contrib.auth.hashers import check_password
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import generics
@@ -19,25 +20,30 @@ NewUser = namedtuple(u'NewUser', (u'user', u'token'))
 @api_view(['POST', ])
 @permission_classes([AllowAny])
 def login(request, ):
-	username = request.POST.get('username', False)
-	password = request.POST.get('password', False)
+	username = request.data.get('username', False)
+	password = request.data.get('password', False)
 
 	if username and password:
 		try:
-			user = User.objects.get('username')
-			if user.password == password:
-				Token.objects.get(user=user).delete()
+			user = User.objects.get(username=username)
+		except:
+			return Response(data={'detail': "User not found"}, status=status.HTTP_404_NOT_FOUND)
+		else:
+			if check_password(password, user.password):
+				try:
+					Token.objects.get(user=user).delete()
+				except:
+					pass
 				token = Token.objects.create(user=user)
 				token.save()
 				response = {
 					'id': user.id,
-					'token': token,
+					'token': token.key,
 				}
 				return Response(data=response, status=status.HTTP_200_OK)
 			else:
 				return Response(data={'detail': "Username or password didn't match"}, status=status.HTTP_404_NOT_FOUND)
-		except:
-			return Response(data={'detail': "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
 	else:
 		return Response(data={'detail': "Provide username and password"}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -48,7 +54,7 @@ def logout(request, ):
 	pk = request.GET.get('user', False)
 	user = User.objects.get(pk=pk) if pk else False
 	if user:
-		Token.objects.delete()
+		Token.objects.get(user=user).delete()
 		return Response(data={"detail": "You are logged out succesfully"}, status=status.HTTP_200_OK)
 	else:
 		return Response(data={"detail": "Invalid token"}, status=status.HTTP_403_FORBIDDEN)
