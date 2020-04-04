@@ -144,6 +144,15 @@ class UserProfile(generics.RetrieveUpdateDestroyAPIView):
 		response = GeneralUserSerializer(user, context={"request": request})
 		return Response(response.data, status=status.HTTP_202_ACCEPTED)
 
+	def destroy(self, request, *args, **kwargs):
+		user = self.get_object()
+		user.is_active = False
+		user.save()
+		response = {
+			'detail': 'User moved to non active, your data still remains'
+		}
+		return Response(data=response, status=status.HTTP_200_OK)
+
 
 class UsersList(generics.ListAPIView):
 	"""

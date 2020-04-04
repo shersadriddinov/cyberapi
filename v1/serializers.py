@@ -42,6 +42,15 @@ class GeneralUserSerializer(serializers.ModelSerializer):
 		)
 		read_only_fields = ("balance", "donate", "karma")
 
+	def update(self, instance, validated_data):
+		profile = validated_data.get('profile', None)
+		if profile['client_settings_json']:
+			print(profile)
+			instance.profile.client_settings_json = profile['client_settings_json']
+			instance.profile.save()
+			del validated_data['profile']
+		return super(GeneralUserSerializer, self).update(instance, validated_data)
+
 
 class UserListSerializer(serializers.ModelSerializer):
 	"""
