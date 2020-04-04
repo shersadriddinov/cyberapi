@@ -39,8 +39,8 @@ class Profile(models.Model):
 	client_settings_json = JSONField(
 		null=True,
 		blank=True,
-		verbose_name=_("Custom user setttings"),
-		help_text=_("JSON field containing user custom setttings"),
+		verbose_name=_("Custom user settings"),
+		help_text=_("JSON field containing user custom settings"),
 	)
 
 	class Meta:

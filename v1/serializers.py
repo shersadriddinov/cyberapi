@@ -13,45 +13,45 @@ class TokenSerializer(serializers.ModelSerializer):
 		fields = ('key', )
 
 
-class ProfileSerializer(serializers.ModelSerializer):
+class ClientSettingsJSONSerializer(serializers.ModelSerializer):
 	"""
 
 	"""
+	client_settings_json = serializers.JSONField()
 
 	class Meta:
 		model = Profile
-		fields = ('balance', 'donate', 'karma')
-
-
-class BalanceSerializer(serializers.ModelSerializer):
-	"""
-
-	"""
-	class Meta:
-		model = Profile
-		fields = ('balance', )
+		fields = ('client_settings_json', )
 
 
 class GeneralUserSerializer(serializers.ModelSerializer):
 	"""
 	All :model:`User` fields
 	"""
-	server_stats = ProfileSerializer(source='profile')
+	balance = serializers.IntegerField(source='profile.balance')
+	donate = serializers.IntegerField(source='profile.donate')
+	karma = serializers.IntegerField(source='profile.karma')
+	client_settings_json = serializers.JSONField(source='profile.client_settings_json')
 
 	class Meta:
 		model = User
-		fields = ("id", "username", "first_name", "email", "server_stats",)
-		read_only_fields = ("server_stats", )
+		fields = (
+			"id", "username", "first_name",
+			"email", "balance", "donate",
+			"karma", "client_settings_json"
+		)
+		read_only_fields = ("balance", "donate", "karma")
 
 
 class UserListSerializer(serializers.ModelSerializer):
 	"""
 
 	"""
+	client_settings_json = serializers.JSONField(source='profile.client_settings_json')
 
 	class Meta:
 		model = User
-		fields = ("id", "username", "first_name",)
+		fields = ("id", "username", "first_name", "client_settings_json")
 
 
 class NewUserSerializer(serializers.Serializer):
