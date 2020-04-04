@@ -9,9 +9,49 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 
 NewUser = namedtuple(u'NewUser', (u'user', u'token'))
+
+
+@api_view(['POST', ])
+@permission_classes([AllowAny])
+def login(request, ):
+	username = request.POST.get('username', False)
+	password = request.POST.get('password', False)
+
+	if username and password:
+		try:
+			user = User.objects.get('username')
+			if user.password == password:
+				Token.objects.get(user=user).delete()
+				token = Token.objects.create(user=user)
+				token.save()
+				response = {
+					'id': user.id,
+					'token': token,
+				}
+				return Response(data=response, status=status.HTTP_200_OK)
+			else:
+				return Response(data={'detail': "Username or password didn't match"}, status=status.HTTP_404_NOT_FOUND)
+		except:
+			return Response(data={'detail': "User not found"}, status=status.HTTP_404_NOT_FOUND)
+	else:
+		return Response(data={'detail': "Provide username and password"}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+@api_view(['GET', ])
+@permission_classes([IsAuthenticated])
+def logout(request, ):
+	pk = request.GET.get('user', False)
+	user = User.objects.get(pk=pk) if pk else False
+	if user:
+		Token.objects.delete()
+		return Response(data={"detail": "You are logged out succesfully"}, status=status.HTTP_200_OK)
+	else:
+		return Response(data={"detail": "Invalid token"}, status=status.HTTP_403_FORBIDDEN)
 
 
 class Auth(generics.CreateAPIView):
