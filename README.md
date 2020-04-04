@@ -14,12 +14,12 @@ If your request start causing error, you will get error status with json. Look a
 }
 ```
 
-## Authorization
-All requests to API are made through API Token Authorization. To get token send following request
+## Login
+All requests to API are made through API Token Authorization. On each successful login new Token for user generated, old deprecated. Only one device of user at a time is allowed. To get token send following request
 <br />
 Method: **POST**
 <br />
-http://127.0.0.1:8000/api-token-auth/
+http://127.0.0.1:8000/api/login
 <br />
 **Body**
 <br />
@@ -31,12 +31,34 @@ password = {_password: example z709pa354rda_}
 <br />
 ```json
 {
-    "token": "3a46db5b038da1a7cc38e3c9332c2e6b00456128"
+    "id": 30,
+    "token": "c1f2dfdbd89d892b7f16d9ce264bf500d72c01e0"
 }
 ```
 <br />
 **All other requests require Authorization Token, do not forget to specify token in each request**
 <br />
+
+
+## Logout
+You can fully log out from game, your Token will be deleted and not replaced until you log in using default login or create a new account.
+<br />
+Method: **GET**
+<br />
+http://127.0.0.1:8000/api/logout
+<br />
+**Params**
+<br />
+user = {_user_id_}
+<br />
+**Return**
+<br />
+```json
+{
+    "detail": "You are logged out successfully"
+}
+```
+
 
 ## Create User
 Create new User instance, makes sure that user does not exist already in database
@@ -62,9 +84,14 @@ password
 ```json
 {
     "user": {
-        "id": 21,
-        "username": "Superman",
-        "email": "sher.sadriddinov@gmail.com"
+        "id": 30,
+        "username": "lbadmin",
+        "first_name": "",
+        "email": "sher.sadriddinov@gmail.com",
+        "balance": 0,
+        "donate": 0,
+        "karma": 0,
+        "client_settings_json": null
     },
     "token": {
         "key": "200a8007e8a9567cd3c37f16881021ebbe148ece"
@@ -74,7 +101,7 @@ password
 
 ## User Info, Edit, Delete
 Get, update, delete user information, depending on requests's method used. User is identified by user id passed.
-You cannot update user's token, balance, donate & karma with this request!
+You cannot update user's token, balance, donate & karma with this request
 <br />
 use **GET** - to get info about user
 <br />
@@ -84,27 +111,26 @@ use **DELETE** - to delete user
 <br />
 http://127.0.0.1:8000/api/user/{user id}/
 <br />
-Method: **GET**, **PUT**, **DELETE**
+Methods:
 <br />
-**Body**
+On **GET** you get user info
 <br />
-username - 150 characters or fewer. Usernames may contain alphanumeric, _, @, +, . and - characters
+On **PUT** you can update user field all at once or one by one. All user info including passwords can be updated, except balance, donate, karma
 <br />
-first_name (optional)
-<br />
-last_name (optional)
-<br />
-email
-<br />
-password
+On **DELETE** user profile moved to inactive state, data could be restored after relogin
 <br />
 **Return**
 <br />
 ```json
 {
-    "id": 21,
-    "username": "Superman",
-    "email": "sher.sadriddinov@gmail.com"
+    "id": 30,
+    "username": "lbadmin",
+    "first_name": "",
+    "email": "sher.sadriddinov@gmail.com",
+    "balance": 0,
+    "donate": 0,
+    "karma": 0,
+    "client_settings_json": null
 }
 ```
 <br />
@@ -144,5 +170,26 @@ _offset_ - you can use it skip some number of results you already used. (optiona
             "email": "sher.sadriddinov@gmail.com"
         }
     ]
+}
+```
+
+## Authorization - `unnecessary`
+All requests to API are made through API Token Authorization. To get token send following request
+<br />
+Method: **POST**
+<br />
+http://127.0.0.1:8000/api-token-auth/
+<br />
+**Body**
+<br />
+username = {_username: example lbadmin_}
+<br />
+password = {_password: example z709pa354rda_}
+<br />
+**Return**
+<br />
+```json
+{
+    "token": "3a46db5b038da1a7cc38e3c9332c2e6b00456128"
 }
 ```
