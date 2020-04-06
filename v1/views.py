@@ -95,7 +95,7 @@ class Auth(generics.CreateAPIView):
 				is_staff=False,
 				is_active=True,
 			)
-			group = Group.objects.get(pk=1)  # Gamers group id = 1
+			group = Group.objects.get(name="Players")
 			group.user_set.add(user)
 			token = Token.objects.get(user=user)
 			new_user = NewUser(user=user, token=token)
