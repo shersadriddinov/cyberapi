@@ -15,14 +15,14 @@ class PlayItem(models.Model):
 		blank=False,
 		max_length=256,
 		verbose_name=_("Technical name"),
-		help_text=_("Character technical name")
+		help_text=_("Object item technical name")
 	)
 	default = models.BooleanField(
 		db_column='default',
 		default=False,
 		blank=True,
-		verbose_name=_("Default Character"),
-		help_text=_("Is the character available by default")
+		verbose_name=_("Default"),
+		help_text=_("Is the object available by default")
 	)
 	hidden = models.BooleanField(
 		db_column='hidden',
@@ -37,7 +37,7 @@ class PlayItem(models.Model):
 		blank=False,
 		default=timezone.now,
 		verbose_name=_("Date Created"),
-		help_text=_("Date when the character was added to database")
+		help_text=_("Date when the object was added to database")
 	)
 
 	class Meta:
@@ -88,8 +88,6 @@ class Stock(Addon):
 	#TODO: Find rules for stock
 	"""
 
-	weapon = models.ManyToManyField(Weapon, through="WeaponAddons", through_fields=("stock", "weapon"))
-
 	class Meta:
 		db_table = "addon_stock"
 		verbose_name = _("Addon Stock")
@@ -104,8 +102,6 @@ class Barrel(Addon):
 	"""
 	#TODO: Find rules for barrel
 	"""
-
-	weapon = models.ManyToManyField(Weapon, through="WeaponAddons", through_fields=("barrel", "weapon"))
 
 	class Meta:
 		db_table = "addon_barrel"
@@ -122,8 +118,6 @@ class Muzzle(Addon):
 	#TODO: Find rules for Muzzle
 	"""
 
-	weapon = models.ManyToManyField(Weapon, through="WeaponAddons", through_fields=("muzzle", "weapon"))
-
 	class Meta:
 		db_table = "addon_muzzle"
 		verbose_name = _("Addon Muzzle")
@@ -138,8 +132,6 @@ class Mag(Addon):
 	"""
 	#TODO: Find rules for Mag
 	"""
-
-	weapon = models.ManyToManyField(Weapon, through="WeaponAddons", through_fields=("mag", "weapon"))
 
 	class Meta:
 		db_table = "addon_mag"
@@ -156,8 +148,6 @@ class Scope(Addon):
 	#TODO: Find rules for Scope
 	"""
 
-	weapon = models.ManyToManyField(Weapon, through="WeaponAddons", through_fields=("scope", "weapon"))
-
 	class Meta:
 		db_table = "addon_scope"
 		verbose_name = _("Addon Scope")
@@ -172,8 +162,6 @@ class Grip(Addon):
 	"""
 	#TODO: Find rules for Grip
 	"""
-
-	weapon = models.ManyToManyField(Weapon, through="WeaponAddons", through_fields=("grip", "weapon"))
 
 	class Meta:
 		db_table = "addon_grip"
@@ -268,43 +256,45 @@ class WeaponAddons(models.Model):
 	weapon = models.ForeignKey(
 		Weapon,
 		on_delete=models.CASCADE,
-		null=False,
-		blank=False
+		blank=False,
+		verbose_name=_("Weapon"),
+		help_text=_("Select weapon to attach all possible addons to it")
 	)
-	stock = models.ForeignKey(
-		Stock, on_delete=models.CASCADE,
-		null=True,
-		blank=True
+	stock = models.ManyToManyField(
+		Stock,
+		blank=True,
+		verbose_name=_("Stocks for selected weapon"),
+		help_text=_("Select stocks to attach to chosen weapon")
 	)
-	barrel = models.ForeignKey(
+	barrel = models.ManyToManyField(
 		Barrel,
-		on_delete=models.CASCADE,
-		null=True,
-		blank=True
+		blank=True,
+		verbose_name=_("Barrels for selected weapon"),
+		help_text=_("Select barrels to attach to chosen weapon")
 	)
-	muzzle = models.ForeignKey(
+	muzzle = models.ManyToManyField(
 		Muzzle,
-		on_delete=models.CASCADE,
-		null=True,
-		blank=True
+		blank=True,
+		verbose_name=_("Muzzles for selected weapon"),
+		help_text=_("Select muzzles to attach to chosen weapon")
 	)
-	mag = models.ForeignKey(
+	mag = models.ManyToManyField(
 		Mag,
-		on_delete=models.CASCADE,
-		null=True,
-		blank=True
+		blank=True,
+		verbose_name=_("Magazines for selected weapon"),
+		help_text=_("Select magazines to attach to chosen weapon")
 	)
-	scope = models.ForeignKey(
+	scope = models.ManyToManyField(
 		Scope,
-		on_delete=models.CASCADE,
-		null=True,
-		blank=True
+		blank=True,
+		verbose_name=_("Scopes for selected weapon"),
+		help_text=_("Select scopes to attach to chosen weapon")
 	)
-	grip = models.ForeignKey(
+	grip = models.ManyToManyField(
 		Grip,
-		on_delete=models.CASCADE,
-		null=True,
-		blank=True
+		blank=True,
+		verbose_name=_("Grips for selected weapon"),
+		help_text=_("Select grips to attach to chosen weapon")
 	)
 
 	class Meta:
@@ -318,7 +308,7 @@ class WeaponAddons(models.Model):
 
 class UserWeapon(models.Model):
 	profile = models.ForeignKey(Profile, on_delete=models.CASCADE, verbose_name=_("User"))
-	weapon = models.ForeignKey(Weapon, on_delete=models.CASCADE, verbose_name=_("Weapon"))
+	weapon_with_addons = models.ForeignKey(WeaponAddons, on_delete=models.CASCADE, verbose_name=_("Weapon with Addons"))
 	date_added = models.DateTimeField(verbose_name=_("Date Added"), default=timezone.now)
 	user_addon_stock = ArrayField(
 		models.PositiveIntegerField(default=1, blank=True),
@@ -358,6 +348,6 @@ class UserWeapon(models.Model):
 		ordering = ("-date_added", )
 
 	def __str__(self):
-		return self.profile.user.username + " with " + self.weapon.tech_name
+		return self.profile.user.username + " with " + self.weapon_with_addons.weapon.tech_name
 
 
