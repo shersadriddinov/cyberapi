@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils import timezone
-from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.fields import JSONField, ArrayField
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
@@ -8,10 +8,7 @@ from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
 
-class Character(models.Model):
-	"""
-
-	"""
+class PlayItem(models.Model):
 	tech_name = models.CharField(
 		db_column='tech_name',
 		null=False,
@@ -44,6 +41,15 @@ class Character(models.Model):
 	)
 
 	class Meta:
+		abstract = True
+
+
+class Character(PlayItem):
+	"""
+
+	"""
+
+	class Meta:
 		db_table = "character"
 		verbose_name = _("Character")
 		verbose_name_plural = _("Characters")
@@ -53,82 +59,10 @@ class Character(models.Model):
 		return self.tech_name
 
 
-class Weapon(models.Model):
+class Weapon(PlayItem):
 	"""
 
 	"""
-	tech_name = models.CharField(
-		db_column='tech_name',
-		null=False,
-		blank=False,
-		max_length=256,
-		verbose_name=_("Technical name"),
-		help_text=_("Weapon technical name")
-	)
-	addon_stock_count = models.PositiveSmallIntegerField(
-		db_column="addon_stock_count",
-		default=1,
-		blank=True,
-		verbose_name=_("Addon Stock Count"),
-		help_text=_("The number of available stock for this weapon")
-	)
-	addon_barrel_count = models.PositiveSmallIntegerField(
-		db_column="addon_barrel_count",
-		default=1,
-		blank=True,
-		verbose_name=_("Addon Barrel Count"),
-		help_text=_("The number of available barrel for this weapon")
-	)
-	addon_muzzle_count = models.PositiveSmallIntegerField(
-		db_column="addon_muzzle_count",
-		default=1,
-		blank=True,
-		verbose_name=_("Addon Muzzle Count"),
-		help_text=_("The number of available muzzle for this weapon")
-	)
-	addon_mag_count = models.PositiveSmallIntegerField(
-		db_column="addon_mag_count",
-		default=1,
-		blank=True,
-		verbose_name=_("Addon Mag Count"),
-		help_text=_("The number of available mag for this weapon")
-	)
-	addon_scope_count = models.PositiveSmallIntegerField(
-		db_column="addon_scope_count",
-		default=1,
-		blank=True,
-		verbose_name=_("Addon Scope Count"),
-		help_text=_("The number of available scope for this weapon")
-	)
-	addon_grip_count = models.PositiveSmallIntegerField(
-		db_column="addon_grip_count",
-		default=1,
-		blank=True,
-		verbose_name=_("Addon Grip Count"),
-		help_text=_("The number of available grip for this weapon")
-	)
-	default = models.BooleanField(
-		db_column='default',
-		default=False,
-		blank=True,
-		verbose_name=_("Default Weapon"),
-		help_text=_("Is the weapon available by default")
-	)
-	hidden = models.BooleanField(
-		db_column='hidden',
-		default=False,
-		blank=True,
-		verbose_name=_("Exclude from requests"),
-		help_text=_("Exclude from requests made by users")
-	)
-	date_created = models.DateTimeField(
-		db_column='date_created',
-		null=False,
-		blank=False,
-		default=timezone.now,
-		verbose_name=_("Date Created"),
-		help_text=_("Date when the weapon was added to database")
-	)
 
 	class Meta:
 		db_table = "weapon"
@@ -140,40 +74,10 @@ class Weapon(models.Model):
 		return self.tech_name
 
 
-class Addon(models.Model):
+class Addon(PlayItem):
 	"""
 
 	"""
-	tech_name = models.CharField(
-		db_column='tech_name',
-		null=False,
-		blank=False,
-		max_length=256,
-		verbose_name=_("Technical name"),
-		help_text=_("Addon technical name")
-	)
-	default = models.BooleanField(
-		db_column='default',
-		default=False,
-		blank=True,
-		verbose_name=_("Default Addon"),
-		help_text=_("Is the addon available by default")
-	)
-	hidden = models.BooleanField(
-		db_column='hidden',
-		default=False,
-		blank=True,
-		verbose_name=_("Exclude from requests"),
-		help_text=_("Exclude from requests made by users")
-	)
-	date_created = models.DateTimeField(
-		db_column='date_created',
-		null=False,
-		blank=False,
-		default=timezone.now,
-		verbose_name=_("Date Created"),
-		help_text=_("Date when the addon was added to database")
-	)
 
 	class Meta:
 		abstract = True
@@ -183,6 +87,9 @@ class Stock(Addon):
 	"""
 	#TODO: Find rules for stock
 	"""
+
+	weapon = models.ManyToManyField(Weapon, through="WeaponAddons", through_fields=("stock", "weapon"))
+
 	class Meta:
 		db_table = "addon_stock"
 		verbose_name = _("Addon Stock")
@@ -197,6 +104,8 @@ class Barrel(Addon):
 	"""
 	#TODO: Find rules for barrel
 	"""
+
+	weapon = models.ManyToManyField(Weapon, through="WeaponAddons", through_fields=("barrel", "weapon"))
 
 	class Meta:
 		db_table = "addon_barrel"
@@ -213,6 +122,8 @@ class Muzzle(Addon):
 	#TODO: Find rules for Muzzle
 	"""
 
+	weapon = models.ManyToManyField(Weapon, through="WeaponAddons", through_fields=("muzzle", "weapon"))
+
 	class Meta:
 		db_table = "addon_muzzle"
 		verbose_name = _("Addon Muzzle")
@@ -227,6 +138,8 @@ class Mag(Addon):
 	"""
 	#TODO: Find rules for Mag
 	"""
+
+	weapon = models.ManyToManyField(Weapon, through="WeaponAddons", through_fields=("mag", "weapon"))
 
 	class Meta:
 		db_table = "addon_mag"
@@ -243,6 +156,8 @@ class Scope(Addon):
 	#TODO: Find rules for Scope
 	"""
 
+	weapon = models.ManyToManyField(Weapon, through="WeaponAddons", through_fields=("scope", "weapon"))
+
 	class Meta:
 		db_table = "addon_scope"
 		verbose_name = _("Addon Scope")
@@ -257,6 +172,8 @@ class Grip(Addon):
 	"""
 	#TODO: Find rules for Grip
 	"""
+
+	weapon = models.ManyToManyField(Weapon, through="WeaponAddons", through_fields=("grip", "weapon"))
 
 	class Meta:
 		db_table = "addon_grip"
@@ -347,8 +264,100 @@ class UserCharacter(models.Model):
 		return self.profile.user.username + " with " + self.character.tech_name
 
 
+class WeaponAddons(models.Model):
+	weapon = models.ForeignKey(
+		Weapon,
+		on_delete=models.CASCADE,
+		null=False,
+		blank=False
+	)
+	stock = models.ForeignKey(
+		Stock, on_delete=models.CASCADE,
+		null=True,
+		blank=True
+	)
+	barrel = models.ForeignKey(
+		Barrel,
+		on_delete=models.CASCADE,
+		null=True,
+		blank=True
+	)
+	muzzle = models.ForeignKey(
+		Muzzle,
+		on_delete=models.CASCADE,
+		null=True,
+		blank=True
+	)
+	mag = models.ForeignKey(
+		Mag,
+		on_delete=models.CASCADE,
+		null=True,
+		blank=True
+	)
+	scope = models.ForeignKey(
+		Scope,
+		on_delete=models.CASCADE,
+		null=True,
+		blank=True
+	)
+	grip = models.ForeignKey(
+		Grip,
+		on_delete=models.CASCADE,
+		null=True,
+		blank=True
+	)
+
+	class Meta:
+		db_table = "weapon_addons"
+		verbose_name = _("Weapon & Available Addons")
+		verbose_name_plural = _("Weapon & Available Addons")
+
+	def __str__(self):
+		return "Available Addons for " + self.weapon.tech_name
+
+
 class UserWeapon(models.Model):
 	profile = models.ForeignKey(Profile, on_delete=models.CASCADE, verbose_name=_("User"))
 	weapon = models.ForeignKey(Weapon, on_delete=models.CASCADE, verbose_name=_("Weapon"))
 	date_added = models.DateTimeField(verbose_name=_("Date Added"), default=timezone.now)
+	user_addon_stock = ArrayField(
+		models.PositiveIntegerField(default=1, blank=True),
+		verbose_name=_('User Stock Addons'),
+		help_text=_("The list containing id's of user's stock addons, which points to id in Stock Addon table")
+	)
+	user_addon_barrel = ArrayField(
+		models.PositiveIntegerField(default=1),
+		verbose_name=_('User Barrel Addons'),
+		help_text=_("The list containing id's of user's barrel addons, which points to id in Barrel Addon table")
+	)
+	user_addon_muzzle = ArrayField(
+		models.PositiveIntegerField(default=1),
+		verbose_name=_('User Stock Muzzle'),
+		help_text=_("The list containing id's of user's muzzle addons, which points to id in Muzzle Addon table")
+	)
+	user_addon_mag = ArrayField(
+		models.PositiveIntegerField(default=1),
+		verbose_name=_('User Mag Addons'),
+		help_text=_("The list containing id's of user's magazine addons, which points to id in Magazine Addon table")
+	)
+	user_addon_scope = ArrayField(
+		models.PositiveIntegerField(default=1),
+		verbose_name=_('User Scope Addons'),
+		help_text=_("The list containing id's of user's scope addons, which points to id in Scope Addon table")
+	)
+	user_addon_grip = ArrayField(
+		models.PositiveIntegerField(default=1),
+		verbose_name=_('User Grip Addons'),
+		help_text=_("The list containing id's of user's grip addons, which points to id in Grip Addon table")
+	)
+
+	class Meta:
+		db_table = "profile_weapon"
+		verbose_name = _("Profile & Weapon")
+		verbose_name_plural = _("Profile & Weapon")
+		ordering = ("-date_added", )
+
+	def __str__(self):
+		return self.profile.user.username + " with " + self.weapon.tech_name
+
 
