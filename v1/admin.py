@@ -3,7 +3,7 @@ from django.contrib.admin import AdminSite
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
-from .models import Profile
+from .models import *
 
 
 class ProfileInline(admin.TabularInline):
@@ -15,8 +15,111 @@ class UserAdmin(UserAdmin):
 	inlines = (ProfileInline, )
 
 
+class UserCharacterInline(admin.TabularInline):
+	model = Profile.character.through
+	extra = 1
+
+
+class UserWeaponInline(admin.StackedInline):
+	model = Profile.weapon.through
+	extra = 1
+
+
+class ProfileAdmin(admin.ModelAdmin):
+	inlines = (UserCharacterInline, UserWeaponInline)
+	list_display = ('id', 'user', 'karma')
+	list_display_links = ("id", "user")
+	list_select_related = True
+	ordering = ('-user__date_joined',)
+	readonly_fields = ("karma", "balance", "donate", "client_settings_json")
+	search_fields = ("user__username",)
+	empty_value_display = '-empty-'
+	fieldsets = (
+		(None, {
+			'fields': (
+				'user', ('balance', 'donate'), 'karma'
+			)
+		}),
+	)
+
+
+class PlayItemAdmin(admin.ModelAdmin):
+	list_display = ('id', 'tech_name', 'date_created', 'default', 'hidden')
+	list_display_links = ("id", "tech_name")
+	list_editable = ('default', 'hidden')
+	list_filter = ('date_created', 'default', 'hidden')
+	list_select_related = True
+	ordering = ('id',)
+	date_hierarchy = "date_created"
+	readonly_fields = ("date_created",)
+	search_fields = ('tech_name',)
+	empty_value_display = '-empty-'
+	fieldsets = (
+		(None, {
+			'fields': ('tech_name', 'date_created', ('default', 'hidden'))
+		}),
+	)
+
+
+class WeaponAddonsAdmin(admin.ModelAdmin):
+	list_display = ("__str__", )
+	filter_horizontal = ("stock", "barrel", "muzzle", "mag", "scope", "grip")
+	list_select_related = True
+	ordering = ("id", )
+	search_fields = ("weapon__tech_name", )
+	empty_value_display = '-empty-'
+
+
+class UserWeaponAdmin(admin.ModelAdmin):
+	list_display = ("id", "__str__", "weapon_with_addons", "date_added")
+	list_display_links = ("id", "__str__")
+	list_select_related = True
+	ordering = ("-date_added", )
+	date_hierarchy = "date_added"
+	readonly_fields = ("date_added",)
+	search_fields = ("profile__user__username", "weapon_with_addons")
+	empty_value_display = '-empty-'
+	autocomplete_fields = ("profile", "weapon_with_addons")
+	fieldsets = (
+		(None, {
+			"fields": (("profile", "weapon_with_addons"), "date_added")
+		}),
+		("Addons available for this user for this weapon", {
+			"fields": (
+				"user_addon_stock", "user_addon_barrel", "user_addon_muzzle",
+				"user_addon_mag", "user_addon_scope", "user_addon_grip"
+			)
+		})
+	)
+
+# For future unique fields 3 classes below created
+
+
+class CharacterAdmin(PlayItemAdmin):
+	pass
+
+
+class WeaponAdmin(PlayItemAdmin):
+	pass
+
+
+class AddonAdmin(PlayItemAdmin):
+	pass
+
+
 admin.site.site_header = _('Cyber Administration')
 admin.site.index_title = _('Cyber Administration')
 admin.site.site_title = _('Cyber API')
 admin.site.unregister(User)
+admin.site.register(Profile, ProfileAdmin)
 admin.site.register(User, UserAdmin)
+admin.site.register(Character, PlayItemAdmin)
+admin.site.register(Weapon, PlayItemAdmin)
+admin.site.register(Stock, PlayItemAdmin)
+admin.site.register(Barrel, PlayItemAdmin)
+admin.site.register(Muzzle, PlayItemAdmin)
+admin.site.register(Mag, PlayItemAdmin)
+admin.site.register(Scope, PlayItemAdmin)
+admin.site.register(Grip, PlayItemAdmin)
+admin.site.register(WeaponAddons, WeaponAddonsAdmin)
+admin.site.register(UserWeapon, UserWeaponAdmin)
