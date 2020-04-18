@@ -174,3 +174,45 @@ class UsersList(generics.ListAPIView):
 	def get_queryset(self):
 		order = self.request.query_params.get('order', '-date_joined')
 		return User.objects.filter(is_active=True, is_staff=False).order_by(order)
+
+
+class CharacterListView(generics.ListAPIView):
+	"""
+
+	"""
+	serializer_class = PlayItemSerializer
+	pagination_class = LimitOffsetPagination
+
+	def get_queryset(self):
+		user = self.request.query_params.get('user', False)
+		order = self.request.query_params.get('order', '-date_created')
+
+		if user:
+			user_characters = UserCharacter.objects.filter(profile=user)
+			query = Character.objects.filter(pk__in=user_characters, hidden=False)
+		else:
+			query = Character.objects.filter(hidden=False).order_by(order)
+		return query
+
+
+class CharacterView(generics.RetrieveDestroyAPIView):
+	"""
+
+	"""
+	serializer_class = ...
+
+
+class WeaponListView(generics.ListAPIView):
+	"""
+
+	"""
+	pass
+
+
+class WeaponView(generics.RetrieveDestroyAPIView):
+	"""
+
+	"""
+	pass
+
+

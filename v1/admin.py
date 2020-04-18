@@ -15,11 +15,32 @@ class UserAdmin(UserAdmin):
 	inlines = (ProfileInline, )
 
 
+class UserCharacterInline(admin.TabularInline):
+	model = Profile.character.through
+	extra = 1
+
+
+class UserWeaponInline(admin.StackedInline):
+	model = Profile.weapon.through
+	extra = 1
+
+
 class ProfileAdmin(admin.ModelAdmin):
-	"""
-	This Model Admin is created just for integration of autocomplete field in UserWeapon Model Admin
-	"""
+	inlines = (UserCharacterInline, UserWeaponInline)
+	list_display = ('id', 'user', 'karma')
+	list_display_links = ("id", "user")
+	list_select_related = True
+	ordering = ('-user__date_joined',)
+	readonly_fields = ("karma", "balance", "donate", "client_settings_json")
 	search_fields = ("user__username",)
+	empty_value_display = '-empty-'
+	fieldsets = (
+		(None, {
+			'fields': (
+				'user', ('balance', 'donate'), 'karma'
+			)
+		}),
+	)
 
 
 class PlayItemAdmin(admin.ModelAdmin):

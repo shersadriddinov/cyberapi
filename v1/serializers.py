@@ -69,3 +69,21 @@ class NewUserSerializer(serializers.Serializer):
 	"""
 	user = GeneralUserSerializer()
 	token = TokenSerializer()
+
+
+class PlayItemSerializer(serializers.ModelSerializer):
+	"""
+
+	"""
+
+	class Meta:
+		model = PlayItem
+		fields = ("id", "tech_name", "default")
+
+
+class WeaponAddonSerializer(serializers.Serializer):
+	"""
+
+	"""
+	weapon = PlayItemSerializer()
+	addons = PlayItemSerializer(many=True)

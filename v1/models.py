@@ -215,11 +215,18 @@ class Profile(models.Model):
 		related_name="profile_character",
 		through="UserCharacter"
 	)
+	weapon = models.ManyToManyField(
+		"WeaponAddons",
+		blank=True,
+		verbose_name=_("User's weapons with addons"),
+		related_name="profile_weapon",
+		through="UserWeapon"
+	)
 
 	class Meta:
 		db_table = 'profile'
-		verbose_name = _('User Balance')
-		verbose_name_plural = _('User Balance')
+		verbose_name = _('User Game Status')
+		verbose_name_plural = _('User Game Status')
 
 	def __str__(self):
 		return self.user.username
