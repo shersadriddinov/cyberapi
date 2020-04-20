@@ -27,8 +27,8 @@ class UserWeaponInline(admin.StackedInline):
 
 class ProfileAdmin(admin.ModelAdmin):
 	inlines = (UserCharacterInline, UserWeaponInline)
-	list_display = ('id', 'user', 'karma')
-	list_display_links = ("id", "user")
+	list_display = ('user', 'karma')
+	list_display_links = ("user", )
 	list_select_related = True
 	ordering = ('-user__date_joined',)
 	readonly_fields = ("karma", "balance", "donate", "client_settings_json")

@@ -318,32 +318,44 @@ class UserWeapon(models.Model):
 	weapon_with_addons = models.ForeignKey(WeaponAddons, on_delete=models.CASCADE, verbose_name=_("Weapon with Addons"))
 	date_added = models.DateTimeField(verbose_name=_("Date Added"), default=timezone.now)
 	user_addon_stock = ArrayField(
-		models.PositiveIntegerField(default=1, blank=True),
+		models.PositiveIntegerField(blank=True),
+		null=True,
+		blank=True,
 		verbose_name=_('User Stock Addons'),
 		help_text=_("The list containing id's of user's stock addons, which points to id in Stock Addon table")
 	)
 	user_addon_barrel = ArrayField(
-		models.PositiveIntegerField(default=1),
+		models.PositiveIntegerField(blank=True),
+		null=True,
+		blank=True,
 		verbose_name=_('User Barrel Addons'),
 		help_text=_("The list containing id's of user's barrel addons, which points to id in Barrel Addon table")
 	)
 	user_addon_muzzle = ArrayField(
-		models.PositiveIntegerField(default=1),
+		models.PositiveIntegerField(blank=True),
+		null=True,
+		blank=True,
 		verbose_name=_('User Stock Muzzle'),
 		help_text=_("The list containing id's of user's muzzle addons, which points to id in Muzzle Addon table")
 	)
 	user_addon_mag = ArrayField(
-		models.PositiveIntegerField(default=1),
+		models.PositiveIntegerField(blank=True),
+		null=True,
+		blank=True,
 		verbose_name=_('User Mag Addons'),
 		help_text=_("The list containing id's of user's magazine addons, which points to id in Magazine Addon table")
 	)
 	user_addon_scope = ArrayField(
-		models.PositiveIntegerField(default=1),
+		models.PositiveIntegerField(blank=True),
+		null=True,
+		blank=True,
 		verbose_name=_('User Scope Addons'),
 		help_text=_("The list containing id's of user's scope addons, which points to id in Scope Addon table")
 	)
 	user_addon_grip = ArrayField(
-		models.PositiveIntegerField(default=1),
+		models.PositiveIntegerField(blank=True),
+		null=True,
+		blank=True,
 		verbose_name=_('User Grip Addons'),
 		help_text=_("The list containing id's of user's grip addons, which points to id in Grip Addon table")
 	)
@@ -356,5 +368,3 @@ class UserWeapon(models.Model):
 
 	def __str__(self):
 		return self.profile.user.username + " with " + self.weapon_with_addons.weapon.tech_name
-
-
