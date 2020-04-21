@@ -16,3 +16,12 @@
 + `UPDATE` balance, donate, karma, client_settings added to user info request
 + `UPDATE` when using user delete request, user moved to is_active=False state
 + `FIX` user password added to user update
+
+## Release 0.0.3
+21-03-2020
++ `NEW` Character, Weapon & Addons Models
++ `NEW` Relations UserCharacter, UserWeapon, WeaponAddons
++ `NEW` Admin: Addons, Weapons, Characters, Weapon & Available Addons, Profile & Weapon, User Game Status (Profile, UserCharacters, UserWeapon)
++ `NEW` Character: List, Single, Add, Remove requests
++ `NEW` Weapons: List, Single, Add, Remove requests
++ `NEW` Signals: Add default addons to Profile & Weapon auto, Add new Weapon to WeaponAddons auto

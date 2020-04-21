@@ -121,7 +121,7 @@ class UserWeaponSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = UserWeapon
 		fields = (
-			"profile", "weapon_with_addons", "user_addon_stock",
-			"user_addon_barrel", "user_addon_muzzle", "user_addon_mag",
-			"user_addon_scope", "user_addon_grip"
+			"id", "profile", "weapon_with_addons",
+			"user_addon_stock", "user_addon_barrel", "user_addon_muzzle",
+			"user_addon_mag", "user_addon_scope", "user_addon_grip"
 		)

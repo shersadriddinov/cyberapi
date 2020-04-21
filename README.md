@@ -173,6 +173,223 @@ _offset_ - you can use it skip some number of results you already used. (optiona
 }
 ```
 
+## Character List
+Returns list containing information about all current available character, id `user_only` parameter passed, returns the
+list of character belonging to user, whose token used
+<br />
+Method: **GET**
+<br />
+http://127.0.0.1:8000/api/character/list/
+<br />
+**PARAMS**
+<br />
+_user_only_ - if set to 1, returns a list containing only user (whose token used) characters
+<br />
+_order_ - order of returned list, you can use `date_created`, `tech_name` or any other param. Use `-` before param (`-date_joined`) to get DESC order
+<br />
+_limit_ - limit list results to certain number (optional) if not used whole list will be returned
+<br />
+_offset_ - you can use it skip some number of results you already used. (optional)
+<br />
+**Return**
+<br />
+```json
+{
+    "count": 5,
+    "next": "http://127.0.0.1:8000/api/character/list/?limit=2&offset=2",
+    "previous": null,
+    "results": [
+        {
+            "id": 8,
+            "tech_name": "Soldier",
+            "default": true
+        },
+        {
+            "id": 6,
+            "tech_name": "Pyro",
+            "default": true
+        }
+    ]
+}
+```
+
+
+## Character
+Returns info about single character by character id
+<br />
+Method: **GET**
+<br />
+http://127.0.0.1:8000/api/character/{id}/
+<br />
+**Return**
+<br />
+```json
+{
+    "id": 4,
+    "tech_name": "Heavy",
+    "default": true
+}
+```
+
+
+## Add Character to User (ONLY FOR DEV PURPOSE, REMOVE BEFORE RELEASE)
+Adds given character by id to user (whose token used) characters
+<br />
+Method: **PUT**
+<br />
+http://127.0.0.1:8000/api/character/{id}/add
+<br />
+**Return**
+<br />
+```json
+{
+    "detail": "Successfully added to user characters"
+}
+```
+
+
+## Remove Character from User
+Removes character from user (whose token used) characters
+<br />
+Method: **DELETE**
+<br />
+http://127.0.0.1:8000/api/character/{id}/
+<br />
+**Return**
+<br />
+```json
+{
+    "detail": "Successfully removed from user characters"
+}
+```
+
+
+## Weapon List
+Returns list containing information about all current available weapons, id `user_only` parameter passed, returns the
+list of weapons belonging to user, whose token used
+<br />
+Method: **GET**
+<br />
+http://127.0.0.1:8000/api/weapon/list/
+<br />
+**PARAMS**
+<br />
+_user_only_ - if set to 1, returns a list containing only user (whose token used) weapons
+<br />
+_order_ - order of returned list, you can use `date_created`, `tech_name` or any other param. Use `-` before param (`-date_joined`) to get DESC order
+<br />
+_limit_ - limit list results to certain number (optional) if not used whole list will be returned
+<br />
+_offset_ - you can use it skip some number of results you already used. (optional)
+<br />
+**Return**
+<br />
+```json
+{
+    "count": 53,
+    "next": "http://127.0.0.1:8000/api/weapon/list/?limit=2&offset=2",
+    "previous": null,
+    "results": [
+        {
+            "id": 53,
+            "tech_name": "MP5-SD",
+            "default": false
+        },
+        {
+            "id": 52,
+            "tech_name": "P90",
+            "default": false
+        }
+    ]
+}
+```
+
+
+## Weapon
+Returns info about single weapon with its addons available for this weapon by its id
+<br />
+Method: **GET**
+<br />
+http://127.0.0.1:8000/api/weapon/{id}/
+<br />
+**PARAM**
+_user_only_ - if set to 1, returns weapon with addons purchased by user
+<br />
+**Return**
+<br />
+```json
+{
+    "weapon": {
+        "id": 52,
+        "tech_name": "P90",
+        "default": false
+    },
+    "stock": [
+        {
+            "id": 5,
+            "tech_name": "Compact 722",
+            "default": true
+        }
+    ],
+    "barrel": [],
+    "muzzle": [],
+    "mag": [],
+    "scope": [],
+    "grip": []
+}
+```
+user_only = 1
+```json
+{
+    "id": 19,
+    "profile": 29,
+    "weapon_with_addons": 4,
+    "user_addon_stock": [
+        5,
+        4,
+        3,
+        2,
+        1
+    ],
+    "user_addon_barrel": [],
+    "user_addon_muzzle": [],
+    "user_addon_mag": [],
+    "user_addon_scope": [],
+    "user_addon_grip": []
+}
+```
+
+## Add Weapon to User (ONLY FOR DEV PURPOSE, REMOVE BEFORE RELEASE)
+Adds given weapon by id to user (whose token used) weapons
+<br />
+Method: **PUT**
+<br />
+http://127.0.0.1:8000/api/weapon/{id}/add
+<br />
+**Return**
+<br />
+```json
+{
+    "detail": "Successfully added to user weapons"
+}
+```
+
+## Remove Weapon from User
+Removes weapon from user (whose token used) weapons
+<br />
+Method: **DELETE**
+<br />
+http://127.0.0.1:8000/api/weapon/{id}/
+<br />
+**Return**
+<br />
+```json
+{
+    "detail": "Successfully removed from user weapons"
+}
+```
+
+
 ## Authorization - `unnecessary`
 All requests to API are made through API Token Authorization. To get token send following request
 <br />
