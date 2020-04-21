@@ -71,19 +71,57 @@ class NewUserSerializer(serializers.Serializer):
 	token = TokenSerializer()
 
 
-class PlayItemSerializer(serializers.ModelSerializer):
+class CharacterSerializer(serializers.ModelSerializer):
 	"""
 
 	"""
 
 	class Meta:
-		model = PlayItem
+		model = Character
 		fields = ("id", "tech_name", "default")
+
+
+class WeaponSerializer(serializers.ModelSerializer):
+	"""
+
+	"""
+
+	class Meta:
+		model = Weapon
+		fields = ("id", "tech_name", "default")
+
+
+class AddonSerializer(serializers.Serializer):
+	"""
+
+	"""
+	id = serializers.IntegerField()
+	tech_name = serializers.CharField()
+	default = serializers.BooleanField()
 
 
 class WeaponAddonSerializer(serializers.Serializer):
 	"""
 
 	"""
-	weapon = PlayItemSerializer()
-	addons = PlayItemSerializer(many=True)
+	weapon = WeaponSerializer()
+	stock = AddonSerializer(many=True)
+	barrel = AddonSerializer(many=True)
+	muzzle = AddonSerializer(many=True)
+	mag = AddonSerializer(many=True)
+	scope = AddonSerializer(many=True)
+	grip = AddonSerializer(many=True)
+
+
+class UserWeaponSerializer(serializers.ModelSerializer):
+	"""
+
+	"""
+
+	class Meta:
+		model = UserWeapon
+		fields = (
+			"profile", "weapon_with_addons", "user_addon_stock",
+			"user_addon_barrel", "user_addon_muzzle", "user_addon_mag",
+			"user_addon_scope", "user_addon_grip"
+		)

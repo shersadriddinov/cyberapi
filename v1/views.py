@@ -14,7 +14,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 
-NewUser = namedtuple(u'NewUser', (u'user', u'token'))
+NewUser = namedtuple('NewUser', ('user', 'token'))
+WeaponAddon = namedtuple('WeaponAddon', ('weapon', 'stock', 'barrel', 'muzzle', 'mag', 'scope', 'grip'))
 
 
 @api_view(['POST', ])
@@ -180,16 +181,17 @@ class CharacterListView(generics.ListAPIView):
 	"""
 
 	"""
-	serializer_class = PlayItemSerializer
+	serializer_class = CharacterSerializer
 	pagination_class = LimitOffsetPagination
 
 	def get_queryset(self):
-		user = self.request.query_params.get('user', False)
+		user_only = int(self.request.query_params.get('user_only', False))
 		order = self.request.query_params.get('order', '-date_created')
 
-		if user:
-			user_characters = UserCharacter.objects.filter(profile=user)
-			query = Character.objects.filter(pk__in=user_characters, hidden=False)
+		if self.request.user and user_only == 1:
+			profile = Profile.objects.get(user=self.request.user)
+			user_characters = UserCharacter.objects.filter(profile=profile).values_list('character', flat=True)
+			query = Character.objects.filter(pk__in=user_characters, hidden=False).order_by(order)
 		else:
 			query = Character.objects.filter(hidden=False).order_by(order)
 		return query
@@ -199,20 +201,125 @@ class CharacterView(generics.RetrieveDestroyAPIView):
 	"""
 
 	"""
-	serializer_class = ...
+	serializer_class = CharacterSerializer
+	queryset = Character.objects.filter(hidden=False)
+	lookup_field = "pk"
+
+	def destroy(self, request, *args, **kwargs):
+		response = dict()
+		profile = Profile.objects.get(user=request.user)
+		character = self.get_object()
+		user_character = UserCharacter.objects.filter(profile=profile, character=character)
+		if user_character:
+			user_character.delete()
+			response['detail'] = "Successfully removed from user characters"
+			response_status = status.HTTP_200_OK
+		else:
+			response['detail'] = "Character given not found in user characters"
+			response_status = status.HTTP_404_NOT_FOUND
+		return Response(data=response, status=response_status)
+
+
+@api_view(["PUT"])
+@permission_classes([IsUserTokenBelongToUser])
+def add_character_to_user(request, pk):
+	response = dict()
+	profile = Profile.objects.get(user=request.user)
+	character = Character.objects.get(pk=pk)
+	user_character = UserCharacter.objects.filter(profile=profile, character=character)
+	if user_character:
+		response['detail'] = "Character given already belongs to user"
+		response_status = status.HTTP_400_BAD_REQUEST
+	else:
+		UserCharacter.objects.create(profile=profile, character=character).save()
+		response['detail'] = "Successfully added to user characters"
+		response_status = status.HTTP_200_OK
+	return Response(data=response, status=response_status)
 
 
 class WeaponListView(generics.ListAPIView):
 	"""
 
 	"""
-	pass
+	serializer_class = WeaponSerializer
+	pagination_class = LimitOffsetPagination
+
+	def get_queryset(self):
+		user_only = self.request.query_params.get('user_only', False)
+		order = self.request.query_params.get('order', '-date_created')
+
+		if self.request.user and user_only == "1":
+			profile = Profile.objects.get(user=self.request.user)
+			user_weapon = UserWeapon.objects.filter(profile=profile).values_list('weapon_with_addons', flat=True)
+			query = Weapon.objects.filter(pk__in=user_weapon, hidden=False).order_by(order)
+		else:
+			query = Weapon.objects.filter(hidden=False).order_by(order)
+		return query
 
 
 class WeaponView(generics.RetrieveDestroyAPIView):
 	"""
 
 	"""
-	pass
+	serializer_class = WeaponAddonSerializer
+	queryset = Weapon.objects.filter(hidden=False)
+	lookup_field = "pk"
+
+	def get(self, request, *args, **kwargs):
+		user_only = self.request.query_params.get('user_only', False)
+		weapon = self.get_object()
+		weapon_with_addons = WeaponAddons.objects.get(weapon=weapon)
+		if request.user and user_only == "1":
+			profile = Profile.objects.get(user=request.user)
+			user_weapon = UserWeapon.objects.get(profile=profile, weapon_with_addons=weapon_with_addons)
+			response = UserWeaponSerializer(user_weapon, context={"request": request})
+		else:
+			serializer = WeaponAddon(
+				weapon=weapon,
+				stock=weapon_with_addons.stock.filter(default=True, hidden=False),
+				barrel=weapon_with_addons.barrel.filter(default=True, hidden=False),
+				muzzle=weapon_with_addons.muzzle.filter(default=True, hidden=False),
+				mag=weapon_with_addons.mag.filter(default=True, hidden=False),
+				scope=weapon_with_addons.scope.filter(default=True, hidden=False),
+				grip=weapon_with_addons.grip.filter(default=True, hidden=False),
+			)
+			response = WeaponAddonSerializer(serializer, context={"request": request})
+		return Response(response.data, status=status.HTTP_200_OK)
+
+	def destroy(self, request, *args, **kwargs):
+		response = dict()
+		profile = Profile.objects.get(user=request.user)
+		weapon = self.get_object()
+		user_weapon = UserWeapon.objects.filter(profile=profile, weapon_with_addons__weapon=weapon)
+		if user_weapon:
+			user_weapon.delete()
+			response['detail'] = "Successfully removed from user weapons"
+			response_status = status.HTTP_200_OK
+		else:
+			response['detail'] = "Weapon given not found in user weapons"
+			response_status = status.HTTP_404_NOT_FOUND
+		return Response(data=response, status=response_status)
+
+
+@api_view(["PUT"])
+@permission_classes([IsUserTokenBelongToUser])
+def add_weapon_to_user(request, pk):
+	response = dict()
+	profile = Profile.objects.get(user=request.user)
+	weapon = Weapon.objects.get(pk=pk)
+	user_weapon = UserWeapon.objects.filter(profile=profile, weapon_with_addons__weapon=weapon)
+	if user_weapon:
+		response['detail'] = "Weapon given already belongs to user"
+		response_status = status.HTTP_400_BAD_REQUEST
+	else:
+		weapon_with_addons = WeaponAddons.objects.get(weapon=weapon)
+		UserWeapon.objects.create(
+			profile=profile,
+			weapon_with_addons=weapon_with_addons,
+		).save()
+		response['detail'] = "Successfully added to user weapons"
+		response_status = status.HTTP_200_OK
+	return Response(data=response, status=response_status)
+
 
 
