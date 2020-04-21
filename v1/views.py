@@ -15,7 +15,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 
 
 NewUser = namedtuple('NewUser', ('user', 'token'))
-WeaponAddon = namedtuple('WeaponAddon', ('weapon', 'addons'))
+WeaponAddon = namedtuple('WeaponAddon', ('weapon', 'stock', 'barrel', 'muzzle', 'mag', 'scope', 'grip'))
 
 
 @api_view(['POST', ])
@@ -245,10 +245,10 @@ class WeaponListView(generics.ListAPIView):
 	pagination_class = LimitOffsetPagination
 
 	def get_queryset(self):
-		user_only = int(self.request.query_params.get('user_only', False))
+		user_only = self.request.query_params.get('user_only', False)
 		order = self.request.query_params.get('order', '-date_created')
 
-		if self.request.user and user_only == 1:
+		if self.request.user and user_only == "1":
 			profile = Profile.objects.get(user=self.request.user)
 			user_weapon = UserWeapon.objects.filter(profile=profile).values_list('weapon_with_addons', flat=True)
 			query = Weapon.objects.filter(pk__in=user_weapon, hidden=False).order_by(order)
@@ -266,18 +266,24 @@ class WeaponView(generics.RetrieveDestroyAPIView):
 	lookup_field = "pk"
 
 	def get(self, request, *args, **kwargs):
+		user_only = self.request.query_params.get('user_only', False)
 		weapon = self.get_object()
 		weapon_with_addons = WeaponAddons.objects.get(weapon=weapon)
-		addons = {
-			'stock': Stock.objects.get(pk=weapon_with_addons.stock.id),
-			'barrel': Barrel.objects.get(pk=weapon_with_addons.barrel.id),
-			'muzzle': Muzzle.objects.get(pk=weapon_with_addons.muzzle.id),
-			'mag': Mag.objects.get(pk=weapon_with_addons.mag.id),
-			'scope': Stock.objects.get(pk=weapon_with_addons.scope.id),
-			'grip': Stock.objects.get(pk=weapon_with_addons.grip.id),
-		}
-		weapon_with_addons = WeaponAddons(weapon=weapon, addons=addons)
-		response = WeaponAddonSerializer(weapon_with_addons, context={"request": request})
+		if request.user and user_only == "1":
+			profile = Profile.objects.get(user=request.user)
+			user_weapon = UserWeapon.objects.get(profile=profile, weapon_with_addons=weapon_with_addons)
+			response = UserWeaponSerializer(user_weapon, context={"request": request})
+		else:
+			serializer = WeaponAddon(
+				weapon=weapon,
+				stock=weapon_with_addons.stock.filter(default=True, hidden=False),
+				barrel=weapon_with_addons.barrel.filter(default=True, hidden=False),
+				muzzle=weapon_with_addons.muzzle.filter(default=True, hidden=False),
+				mag=weapon_with_addons.mag.filter(default=True, hidden=False),
+				scope=weapon_with_addons.scope.filter(default=True, hidden=False),
+				grip=weapon_with_addons.grip.filter(default=True, hidden=False),
+			)
+			response = WeaponAddonSerializer(serializer, context={"request": request})
 		return Response(response.data, status=status.HTTP_200_OK)
 
 	def destroy(self, request, *args, **kwargs):
@@ -307,21 +313,9 @@ def add_weapon_to_user(request, pk):
 		response_status = status.HTTP_400_BAD_REQUEST
 	else:
 		weapon_with_addons = WeaponAddons.objects.get(weapon=weapon)
-		default_stock_id = weapon_with_addons.stock.filter(default=True).value_list('stock__id', flat=True)
-		default_barrel_id = weapon_with_addons.barrel.filter(default=True).value_list('barrel__id', flat=True)
-		default_muzzle_id = weapon_with_addons.muzzle.filter(default=True).value_list('muzzle__id', flat=True)
-		default_mag_id = weapon_with_addons.mag.filter(default=True).value_list('mag__id', flat=True)
-		default_scope_id = weapon_with_addons.scope.filter(default=True).value_list('scope__id', flat=True)
-		default_grip_id = weapon_with_addons.grip.filter(default=True).value_list('grip__id', flat=True)
 		UserWeapon.objects.create(
 			profile=profile,
 			weapon_with_addons=weapon_with_addons,
-			user_addon_stock=default_stock_id,
-			user_addon_barrel=default_barrel_id,
-			user_addon_muzzle=default_muzzle_id,
-			user_addon_mag=default_mag_id,
-			user_addon_scope=default_scope_id,
-			user_addon_grip=default_grip_id,
 		).save()
 		response['detail'] = "Successfully added to user weapons"
 		response_status = status.HTTP_200_OK

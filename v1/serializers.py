@@ -105,4 +105,23 @@ class WeaponAddonSerializer(serializers.Serializer):
 
 	"""
 	weapon = WeaponSerializer()
-	addons = AddonSerializer(many=True)
+	stock = AddonSerializer(many=True)
+	barrel = AddonSerializer(many=True)
+	muzzle = AddonSerializer(many=True)
+	mag = AddonSerializer(many=True)
+	scope = AddonSerializer(many=True)
+	grip = AddonSerializer(many=True)
+
+
+class UserWeaponSerializer(serializers.ModelSerializer):
+	"""
+
+	"""
+
+	class Meta:
+		model = UserWeapon
+		fields = (
+			"profile", "weapon_with_addons", "user_addon_stock",
+			"user_addon_barrel", "user_addon_muzzle", "user_addon_mag",
+			"user_addon_scope", "user_addon_grip"
+		)
