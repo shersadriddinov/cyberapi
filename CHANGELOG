@@ -25,3 +25,7 @@
 + `NEW` Character: List, Single, Add, Remove requests
 + `NEW` Weapons: List, Single, Add, Remove requests
 + `NEW` Signals: Add default addons to Profile & Weapon auto, Add new Weapon to WeaponAddons auto
+
+## Release 0.0.4
+09-03-2020
++ `NEW` Signals: Auto add default weapons to new users

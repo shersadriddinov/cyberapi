@@ -19,3 +19,14 @@ def create_weapon_with_addons(sender, instance, created, **kwargs):
 		instance.user_addon_scope = list(instance.weapon_with_addons.scope.filter(default=True, hidden=False).values_list('id', flat=True))
 		instance.user_addon_grip = list(instance.weapon_with_addons.grip.filter(default=True, hidden=False).values_list('id', flat=True))
 		instance.save()
+
+
+@receiver(post_save, sender=Profile)
+def add_default_weapons_with_addons_to_new_user(sender, instance, created, **kwargs):
+	if created:
+		default_weapons = WeaponAddons.objects.filter(weapon__default=True, weapon__hidden=False)
+		for weapon in default_weapons:
+			UserWeapon.objects.create(
+				profile=instance,
+				weapon_with_addons=weapon
+			)
