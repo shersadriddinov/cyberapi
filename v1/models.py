@@ -3,12 +3,13 @@ from django.utils import timezone
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import User
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
 
 class PlayItem(models.Model):
+	"""
+	Abstract class to inherit all common properties of characters, weapons and addons
+	"""
 	tech_name = models.CharField(
 		db_column='tech_name',
 		null=False,
@@ -46,7 +47,7 @@ class PlayItem(models.Model):
 
 class Character(PlayItem):
 	"""
-
+	All characters user can use in game inherits from :model:`PlayItem`
 	"""
 
 	class Meta:
@@ -61,7 +62,7 @@ class Character(PlayItem):
 
 class Weapon(PlayItem):
 	"""
-
+	All weapons available in game, inherits from :model:`PlayItem`
 	"""
 
 	class Meta:
@@ -76,7 +77,7 @@ class Weapon(PlayItem):
 
 class Addon(PlayItem):
 	"""
-
+	Abstract model for all addons, to collect all addons and their common properties, inherits from :model:`PlayItem`
 	"""
 
 	class Meta:
@@ -85,7 +86,7 @@ class Addon(PlayItem):
 
 class Stock(Addon):
 	"""
-	#TODO: Find rules for stock
+	Stock addons, inherits from :model:`Addon`
 	"""
 
 	class Meta:
@@ -100,7 +101,7 @@ class Stock(Addon):
 
 class Barrel(Addon):
 	"""
-	#TODO: Find rules for barrel
+	Barrel addons, inherits from :model:`Addon`
 	"""
 
 	class Meta:
@@ -115,7 +116,7 @@ class Barrel(Addon):
 
 class Muzzle(Addon):
 	"""
-	#TODO: Find rules for Muzzle
+	Muzzle addons, inherits from :model:`Addon`
 	"""
 
 	class Meta:
@@ -130,7 +131,7 @@ class Muzzle(Addon):
 
 class Mag(Addon):
 	"""
-	#TODO: Find rules for Mag
+	Mag addons, inherits from :model:`Addon`
 	"""
 
 	class Meta:
@@ -145,7 +146,7 @@ class Mag(Addon):
 
 class Scope(Addon):
 	"""
-	#TODO: Find rules for Scope
+	Scope addons, inherits from :model:`Addon`
 	"""
 
 	class Meta:
@@ -160,7 +161,7 @@ class Scope(Addon):
 
 class Grip(Addon):
 	"""
-	#TODO: Find rules for Grip
+	Grip addons, inherits from :model:`Addon`
 	"""
 
 	class Meta:
@@ -232,19 +233,11 @@ class Profile(models.Model):
 		return self.user.username
 
 
-@receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-	if created:
-		Profile.objects.create(user=instance)
-		Token.objects.create(user=instance)
-
-
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-	instance.profile.save()
-
-
 class UserCharacter(models.Model):
+	"""
+	ManyToMany model for :model:`Profile` and :model:`Character` with some additional info. Represents all characters
+	selected by user and all users selected certain character
+	"""
 	profile = models.ForeignKey(Profile, on_delete=models.CASCADE, verbose_name=_("User"))
 	character = models.ForeignKey(Character, on_delete=models.CASCADE, verbose_name=_("Character"))
 	date_added = models.DateTimeField(verbose_name=_("Date Added"), default=timezone.now)
@@ -260,6 +253,9 @@ class UserCharacter(models.Model):
 
 
 class WeaponAddons(models.Model):
+	"""
+	ManyToMany model for :model:`Weapon` and :model:`Addon`. Represents all available addons for the given weapon
+	"""
 	weapon = models.ForeignKey(
 		Weapon,
 		on_delete=models.CASCADE,
@@ -314,6 +310,10 @@ class WeaponAddons(models.Model):
 
 
 class UserWeapon(models.Model):
+	"""
+	Many to Many model for :model:`Profile` and :model:`WeaponAddons`. Represents User and its
+	weapons with selected addons.
+	"""
 	profile = models.ForeignKey(Profile, on_delete=models.CASCADE, verbose_name=_("User"))
 	weapon_with_addons = models.ForeignKey(WeaponAddons, on_delete=models.CASCADE, verbose_name=_("Weapon with Addons"))
 	date_added = models.DateTimeField(verbose_name=_("Date Added"), default=timezone.now)

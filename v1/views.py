@@ -21,6 +21,12 @@ WeaponAddon = namedtuple('WeaponAddon', ('weapon', 'stock', 'barrel', 'muzzle', 
 @api_view(['POST', ])
 @permission_classes([AllowAny])
 def login(request, ):
+	"""
+	Function to login user with username and password. After successful user and password match, deletes old User token
+	and creates new Token. User state activates.
+
+	:return json containing user id and user new token
+	"""
 	username = request.data.get('username', False)
 	password = request.data.get('password', False)
 
@@ -54,6 +60,11 @@ def login(request, ):
 @api_view(['GET', ])
 @permission_classes([IsAuthenticated])
 def logout(request, ):
+	"""
+	Function to logout user. While log out user token is deprecated
+
+	:return 200 OK
+	"""
 	pk = request.GET.get('user', False)
 	user = User.objects.get(pk=pk) if pk else False
 	if user:
@@ -179,7 +190,14 @@ class UsersList(generics.ListAPIView):
 
 class CharacterListView(generics.ListAPIView):
 	"""
+	Returns a list containing either all character or only user character if specified with `user_only` param. User is
+	identified by token used for this request
 
+	:param user_only - boolean flag (1 - True, otherwise always False) to get characters of User or all characters
+	:param order - order of returned list, you can use `date_created`, `tech_name`, or any other param.
+	Use `-` before param (`-date_joined`) to get DESC order
+
+	:return json containing characters
 	"""
 	serializer_class = CharacterSerializer
 	pagination_class = LimitOffsetPagination
@@ -199,7 +217,10 @@ class CharacterListView(generics.ListAPIView):
 
 class CharacterView(generics.RetrieveDestroyAPIView):
 	"""
+	Get or delete character from user, depending on requests's method used. User is identified by token used in request.
 
+	use **GET** - to get info about character
+	use **DELETE** - to removed from user characters
 	"""
 	serializer_class = CharacterSerializer
 	queryset = Character.objects.filter(hidden=False)
@@ -223,6 +244,13 @@ class CharacterView(generics.RetrieveDestroyAPIView):
 @api_view(["PUT"])
 @permission_classes([IsUserTokenBelongToUser])
 def add_character_to_user(request, pk):
+	"""
+	Function to add character specified by id to user, user identified by token used
+
+	:param request - request object
+	:param pk - id of character, which is adding to the user
+	:return 200 OK
+	"""
 	response = dict()
 	profile = Profile.objects.get(user=request.user)
 	character = Character.objects.get(pk=pk)
@@ -239,7 +267,14 @@ def add_character_to_user(request, pk):
 
 class WeaponListView(generics.ListAPIView):
 	"""
+	Returns a list containing either all weapons or only user weapon if specified with `user_only` param. User is
+	identified by token used for this request
 
+	:param user_only - boolean flag (1 - True, otherwise always False) to get weapons of User or all weapons
+	:param order - order of returned list, you can use `date_created`, `tech_name`, or any other param.
+	Use `-` before param (`-date_joined`) to get DESC order
+
+	:return json containing weapons
 	"""
 	serializer_class = WeaponSerializer
 	pagination_class = LimitOffsetPagination
@@ -259,7 +294,11 @@ class WeaponListView(generics.ListAPIView):
 
 class WeaponView(generics.RetrieveDestroyAPIView):
 	"""
+	Get or delete weapon with addons from user, depending on requests's method used. User is identified by token used
+	in request.
 
+	use **GET** - to get info about weapon
+	use **DELETE** - to removed from user weapon
 	"""
 	serializer_class = WeaponAddonSerializer
 	queryset = Weapon.objects.filter(hidden=False)
@@ -304,6 +343,13 @@ class WeaponView(generics.RetrieveDestroyAPIView):
 @api_view(["PUT"])
 @permission_classes([IsUserTokenBelongToUser])
 def add_weapon_to_user(request, pk):
+	"""
+	Function to add weapon specified by id to user, user identified by token used
+
+	:param request - request object
+	:param pk - id of weapon, which is adding to the user
+	:return 200 OK
+	"""
 	response = dict()
 	profile = Profile.objects.get(user=request.user)
 	weapon = Weapon.objects.get(pk=pk)
