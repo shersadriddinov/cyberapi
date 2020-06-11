@@ -9,7 +9,7 @@
 
 
 ## Release 0.0.2
-04-03-2020
+04-04-2020
 + `NEW` login request
 + `NEW` logout request
 + `UPDATE` profile model with client_settings
@@ -18,7 +18,7 @@
 + `FIX` user password added to user update
 
 ## Release 0.0.3
-21-03-2020
+21-04-2020
 + `NEW` Character, Weapon & Addons Models
 + `NEW` Relations UserCharacter, UserWeapon, WeaponAddons
 + `NEW` Admin: Addons, Weapons, Characters, Weapon & Available Addons, Profile & Weapon, User Game Status (Profile, UserCharacters, UserWeapon)
@@ -27,5 +27,10 @@
 + `NEW` Signals: Add default addons to Profile & Weapon auto, Add new Weapon to WeaponAddons auto
 
 ## Release 0.0.4
-09-03-2020
+09-06-2020
 + `NEW` Signals: Auto add default weapons to new users
+
+## Release 0.0.5
+11-06-2020
++ `NEW` Signals: Auto add default weapon to all users
++ `UPDATE` Docs created for all models, views, signals
