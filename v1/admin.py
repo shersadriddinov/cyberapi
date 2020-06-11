@@ -60,6 +60,10 @@ class PlayItemAdmin(admin.ModelAdmin):
 		}),
 	)
 
+	def save_model(self, request, obj, form, change):
+		obj.from_admin_site = True
+		super().save_model(request, obj, form, change)
+
 
 class WeaponAddonsAdmin(admin.ModelAdmin):
 	list_display = ("__str__", )

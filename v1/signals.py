@@ -1,4 +1,5 @@
 from django.db.models.signals import post_save
+from django.core.exceptions import ObjectDoesNotExist
 from django.dispatch import receiver
 from v1.models import *
 
@@ -28,6 +29,21 @@ def create_weapon_with_addons(sender, instance, created, **kwargs):
 	"""
 	if created:
 		WeaponAddons.objects.create(weapon=instance)
+
+
+@receiver(post_save, sender=Weapon)
+def add_default_weapon_for_all(sender, instance, **kwargs):
+	"""
+	Auto add weapon to all users if weapon is marked as a default
+	"""
+	if instance.default and not instance.hidden and getattr(instance, 'from_admin_site', False):
+		weapon_with_addons = WeaponAddons.objects.get(weapon=instance)
+		users = Profile.objects.all()
+		for user in users:
+			try:
+				UserWeapon.objects.get(profile=user, weapon_with_addons=weapon_with_addons)
+			except ObjectDoesNotExist:
+				UserWeapon.objects.create(profile=user, weapon_with_addons=weapon_with_addons)
 
 
 @receiver(post_save, sender=UserWeapon)
