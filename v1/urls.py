@@ -19,4 +19,8 @@ urlpatterns = [
 	path('weapon/list/', views.WeaponListView.as_view()),
 	path('weapon/<int:pk>/', views.WeaponView.as_view()),
 	path('weapon/<int:pk>/add', views.add_weapon_to_user),
+
+	# Friend
+	path('friend/add', views.add_friend),
+	path('friend/remove', views.remove_friend),
 ]
