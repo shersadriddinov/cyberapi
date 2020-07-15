@@ -20,9 +20,16 @@ class UserCharacterInline(admin.TabularInline):
 	extra = 1
 
 
-class UserWeaponInline(admin.StackedInline):
+class UserWeaponInline(admin.TabularInline):
 	model = Profile.weapon.through
 	extra = 1
+
+
+# Don't use now, has a huge bug with user adding itself to friends
+class UserFriendsInline(admin.TabularInline):
+	model = Profile.friends.through
+	fk_name = "friend"
+	extra = 0
 
 
 class ProfileAdmin(admin.ModelAdmin):

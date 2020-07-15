@@ -34,3 +34,17 @@
 11-06-2020
 + `NEW` Signals: Auto add default weapon to all users
 + `UPDATE` Docs created for all models, views, signals
+
+## Release 0.0.6
+16-07-2020
++ `UPDATE` View: password while user creating now also hashes
++ `NEW` Model: added FriendList M2M model for user and his friends
++ `NEW` View: add_friend to add friend to User
++ `NEW` View: remove_friend to remove friend from User
++ `NEW` Signal: auto reverse addition of friends to each other
++ `NEW` Signal: auto reverse removing of friends from each other
++ `NEW` socket_handler app to serve socket needs
++ `NEW` Models: Notification to keep track of all notifications
++ `NEW` Admin: Notification admin
++ `NEW` View: ConnectUser to send all notifications to user just connected to the socket
++ `NEW` Permission: Check if the user connected to the socket have valid token and uuid

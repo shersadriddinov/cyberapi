@@ -97,7 +97,7 @@ class Auth(generics.CreateAPIView):
 		try:
 			user = User.objects.get(username=username)
 		except ObjectDoesNotExist:
-			user = User.objects.create(
+			user = User.objects.create_user(
 				username=username,
 				first_name=first_name,
 				last_name=last_name,
@@ -169,23 +169,6 @@ class UserProfile(generics.RetrieveUpdateDestroyAPIView):
 			'detail': 'User moved to non active, your data still remains'
 		}
 		return Response(data=response, status=status.HTTP_200_OK)
-
-
-class UsersList(generics.ListAPIView):
-	"""
-	Returns a list containing all active user's
-	:param order - order of returned list, you can use `date_joined`, `username`, `last_login` or any other param.
-	Use `-` before param (`-date_joined`) to get DESC order
-	:param limit - limit list results to certain number (optional) if not used whole list will be returned
-	:param offset - you can use it skip some number of results you already used. (optional)
-	:return json containing list of users
-	"""
-	serializer_class = UserListSerializer
-	pagination_class = LimitOffsetPagination
-
-	def get_queryset(self):
-		order = self.request.query_params.get('order', '-date_joined')
-		return User.objects.filter(is_active=True, is_staff=False).order_by(order)
 
 
 class CharacterListView(generics.ListAPIView):
@@ -365,6 +348,69 @@ def add_weapon_to_user(request, pk):
 		).save()
 		response['detail'] = "Successfully added to user weapons"
 		response_status = status.HTTP_200_OK
+	return Response(data=response, status=response_status)
+
+
+class UsersList(generics.ListAPIView):
+	"""
+	Returns a list containing all active user's
+
+	:param user_only - boolean flag (1 - True, otherwise always False) to get list of friends of the User
+	:param order - order of returned list, you can use `date_joined`, `username`, `last_login` or any other param.
+	Use `-` before param (`-date_joined`) to get DESC order
+	:param limit - limit list results to certain number (optional) if not used whole list will be returned
+	:param offset - you can use it skip some number of results you already used. (optional)
+	:return json containing list of users
+	"""
+	serializer_class = UserListSerializer
+	pagination_class = LimitOffsetPagination
+
+	def get_queryset(self):
+		order = self.request.query_params.get('order', '-date_joined')
+		user_only = self.request.query_params.get('user_only', False)
+
+		if self.request.user and user_only == "1":
+			profile = Profile.objects.get(user=self.request.user)
+			friends = FriendsList.objects.filter(profile=profile).values_list('friend', flat=True)
+			query = User.objects.filter(is_active=True, is_staff=False, pk__in=friends).order_by(order)
+		else:
+			query = User.objects.filter(is_active=True, is_staff=False).order_by(order)
+		return query
+
+
+@api_view(["PUT"])
+@permission_classes([IsUserTokenBelongToUser])
+def add_friend(request, pk):
+	"""
+
+	"""
+	response = dict()
+	friend = Profile.objects.get(pk, False)
+	result = FriendsList.add_friend(request.user, friend) if friend else False
+	if result:
+		response['detail'] = "User added to friends list"
+		response_status = status.HTTP_201_CREATED
+	else:
+		response['detail'] = "User already in friends list"
+		response_status = status.HTTP_409_CONFLICT
+	return Response(data=response, status=response_status)
+
+
+@api_view(["PUT"])
+@permission_classes([IsUserTokenBelongToUser])
+def remove_friend(request, pk):
+	"""
+
+	"""
+	response = dict()
+	friend = Profile.objects.get(pk, False)
+	result = FriendsList.remove_friend(request.user, friend) if friend else False
+	if result:
+		response['detail'] = "User removed from friends list"
+		response_status = status.HTTP_201_CREATED
+	else:
+		response['detail'] = "User does not present in friends list"
+		response_status = status.HTTP_409_CONFLICT
 	return Response(data=response, status=response_status)
 
 

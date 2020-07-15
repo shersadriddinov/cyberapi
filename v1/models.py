@@ -179,6 +179,13 @@ class Profile(models.Model):
 	Information about user, works in one to one link with default :model:`User`
 	"""	
 	user = models.OneToOneField(User, on_delete=models.CASCADE)
+	friends = models.ManyToManyField(
+		"Profile",
+		verbose_name=_("Friends"),
+		blank=True,
+		related_name="friend_list",
+		through="FriendsList",
+	)
 	balance = models.PositiveIntegerField(
 		db_column='balance',
 		null=False,
@@ -231,6 +238,41 @@ class Profile(models.Model):
 
 	def __str__(self):
 		return self.user.username
+
+
+class FriendsList(models.Model):
+	"""
+	ManyToMany model for :model:`Profile` and :model:`Profile` to make friends & clans behaviour with some additional
+	info, represents all friends of user and their clan
+	"""
+	profile = models.ForeignKey(Profile, on_delete=models.CASCADE, verbose_name=_("User"), related_name="profile")
+	friend = models.ForeignKey(Profile, on_delete=models.CASCADE, verbose_name=_("Friend"), related_name="friend")
+	date_added = models.DateTimeField(verbose_name=_("Date Added"), default=timezone.now)
+	matches_played = models.PositiveIntegerField(verbose_name=_("In teams plays count"), default=0, blank=True)
+
+	class Meta:
+		db_table = "friends_list"
+		verbose_name = _("Friends List")
+		verbose_name_plural = _("Friends List")
+		ordering = ("-date_added", )
+		unique_together = ('profile', 'friend')
+
+	@classmethod
+	def add_friend(cls, profile, friend):
+		connection, created = FriendsList.objects.get_or_create(profile=profile, friend=friend)
+		reverse_connection, reverse_created = FriendsList.objects.get_or_create(profile=friend, friend=profile)
+		return created
+
+	@classmethod
+	def remove_friend(cls, profile, friend):
+		connection, created = FriendsList.objects.get_or_create(profile=profile, friend=friend)
+		connection.delete() if not created else False
+		reverse_connection, reverse_created = FriendsList.objects.get_or_create(profile=friend, friend=profile)
+		reverse_connection.delete() if not reverse_created else False
+		return not created
+
+	def __str__(self):
+		return str(self.profile)
 
 
 class UserCharacter(models.Model):
