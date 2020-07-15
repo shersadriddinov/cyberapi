@@ -97,7 +97,7 @@ class Auth(generics.CreateAPIView):
 		try:
 			user = User.objects.get(username=username)
 		except ObjectDoesNotExist:
-			user = User.objects.create(
+			user = User.objects.create_user(
 				username=username,
 				first_name=first_name,
 				last_name=last_name,
