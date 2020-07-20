@@ -151,6 +151,7 @@ _limit_ - limit list results to certain number (optional) if not used whole list
 <br />
 _offset_ - you can use it skip some number of results you already used. (optional)
 <br />
+_user_only_ -  boolean flag (1 - True, otherwise always False) to get list of friends of the User
 **Return**
 <br />
 ```json
@@ -383,12 +384,102 @@ http://127.0.0.1:8000/api/weapon/{id}/
 <br />
 **Return**
 <br />
+
 ```json
 {
     "detail": "Successfully removed from user weapons"
 }
 ```
 
+## Notifications
+Returns a list containing all active notifications. Use it after every connection to web socket, and each time socket sends notification
+<br />
+```json
+{
+	"action": "notification"
+}
+```
+<br />
+Method: **GET**
+<br />
+http://127.0.0.1:8000/api/socket/connect/
+<br />
+**Return**
+<br />
+```json
+{
+	{
+        "id": 3,
+        "date_created": "2020-07-20T21:49:28.882307+05:00",
+        "notif_type": 1,
+        "message": null,
+        "status": true,
+        "user": 49,
+        "friend_id": 48
+    }
+}
+```
+
+## Friend Requests
+Get list of your friend requests or make friend request
+<br/>
+Methods:
+<br/>
+On **GET** you will receive list of friend requests
+<br/>
+On **POST** you will create a friend request
+<br/>
+```json
+{
+	"friend": 48 
+}
+```
+<br/>
+http://127.0.0.1:8000/api/socket/friend/request/
+<br />
+**Return**
+<br />
+```json
+{
+	"id": 3,
+	"date_created": "2020-07-20T21:49:28.882307+05:00",
+	"notif_type": 1,
+	"message": null,
+	"status": true,
+	"user": 49,
+	"friend_id": 48
+}
+```
+
+## Add Friend
+Function to confirm friend request
+<br />
+Method: **PUT**
+<br />
+http://127.0.0.1:8000/api/friend/add/{user_id}/
+<br />
+**Return**
+<br />
+```json
+{
+	"detail": "User added to friends list"
+}
+```
+
+## Remove Friend
+Function to remove someone from your friend list
+<br />
+Method: **PUT**
+<br />
+http://127.0.0.1:8000/api/friend/remove/{user_id}/
+<br />
+**Return**
+<br />
+```json
+{
+	"detail": "User removed from friends list"
+}
+```
 
 ## Authorization - `unnecessary`
 All requests to API are made through API Token Authorization. To get token send following request
