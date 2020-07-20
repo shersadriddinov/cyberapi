@@ -92,7 +92,7 @@ class Auth(generics.CreateAPIView):
 
 	def post(self, request, *args, **kwargs):
 		username = request.data.get('username', False)
-		first_name = request.data.get('first_name', '')
+		first_name = request.data.get('first_name',)
 		last_name = request.data.get('last_name', '')
 		email = request.data.get('email', False)
 		password = request.data.get('password', False)
@@ -110,6 +110,9 @@ class Auth(generics.CreateAPIView):
 				is_staff=False,
 				is_active=True,
 			)
+			if not user.first_name:
+				user.first_name = "Player" + str(user.id)
+				user.save()
 			group = Group.objects.get(name="Players")
 			group.user_set.add(user)
 			token = Token.objects.get(user=user)

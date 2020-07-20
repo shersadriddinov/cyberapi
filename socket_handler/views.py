@@ -9,9 +9,15 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 
 
-class ConnectUser(generics.ListAPIView):
+class NotificationView(generics.ListAPIView):
 	"""
-	#TODO: write clear docs
+	Returns a list containing all active notifications. Use it after every connection to web socket, and each time
+	socket sends notification
+	```json
+	{"action": "notification"}
+	```
+
+	:return json containing list of notifications
 	"""
 	permission_classes = (IsAuthenticated,)
 	serializer_class = NotificationSerializer
@@ -27,24 +33,27 @@ class ConnectUser(generics.ListAPIView):
 
 class FriendNotificationView(generics.ListCreateAPIView):
 	"""
-	#TODO: write clear docs
+	Get list of your friend requests or make friend request
+
+	use **GET** for list of friend requests
+	use **POST** to create friend request by specifying friend's user id
 	"""
 	permission_classes = (IsAuthenticated,)
 	serializer_class = NotificationSerializer
 
 	def get_queryset(self):
-		return Notification.objects.filter(profile=self.request.user, type=1, status=True)
+		return Notification.objects.filter(user=self.request.user, notif_type=1, status=True)
 
 	def create(self, request, *args, **kwargs):
 		response = dict()
-		friend = Profile.objects.get(args[0], False)
+		friend = User.objects.get(pk=request.data.get('friend'))
 		if friend:
-			friendship = FriendsList.objects.filter(profile=request.user, friend=friend)
+			friendship = FriendsList.objects.filter(profile__user=request.user, friend__user=friend)
 			if not friendship:
-				friendship_notif = Notification.objects.get_or_create(
+				friendship_notif, created = Notification.objects.get_or_create(
 					user=friend,
 					notif_type=1,
-					friend_id=request.user.id,
+					friend_id=request.user,
 				)
 				data = {
 					"action": "notification",
@@ -74,13 +83,17 @@ class FriendNotificationView(generics.ListCreateAPIView):
 @permission_classes([IsAuthenticated])
 def confirm_friendship(request, pk):
 	"""
-	#TODO: write clear docs
+	Function to confirm friend request
+
+	:param request - user request object
+	:param pk - friend's user id
+	:return json containing result (added or already in your friend list)
 	"""
 	response = dict()
-	friend = Profile.objects.get(pk, False)
-	result = FriendsList.add_friend(request.user, friend) if friend else False
+	friend = Profile.objects.get(user=pk)
+	result = FriendsList.add_friend(Profile.objects.get(user=request.user), friend) if friend else False
 	if result:
-		send_to_socket({"action": "friend_request_confirm", "friend": request.user, "uuid": friend})
+		send_to_socket({"action": "friend_request_confirm", "friend": request.user.id, "uuid": friend.id})
 		response['detail'] = "User added to friends list"
 		response_status = status.HTTP_201_CREATED
 	else:
@@ -93,11 +106,15 @@ def confirm_friendship(request, pk):
 @permission_classes([IsAuthenticated])
 def remove_friend(request, pk):
 	"""
-	#TODO: write clear docs
+	Function to remove someone from your friend list
+
+	:param request - user request object
+	:param pk - friend's user id
+	:return json containing result (removed or not found in your list)
 	"""
 	response = dict()
-	friend = Profile.objects.get(pk, False)
-	result = FriendsList.remove_friend(request.user, friend) if friend else False
+	friend = Profile.objects.get(user=pk)
+	result = FriendsList.remove_friend(Profile.objects.get(user=request.user), friend) if friend else False
 	if result:
 		response['detail'] = "User removed from friends list"
 		response_status = status.HTTP_201_CREATED
