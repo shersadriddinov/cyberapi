@@ -454,6 +454,10 @@ Method: **PUT**
 <br />
 http://127.0.0.1:8000/api/friend/add/{user_id}/
 <br />
+**PARAM**
+<br />
+confirm - boolean (1 - True, 0 -False) to add frien or ignore
+<br />
 **Return**
 <br />
 ```json

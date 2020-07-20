@@ -92,6 +92,9 @@ def confirm_friendship(request, pk):
 	"""
 	response = dict()
 	friend = Profile.objects.get(user=pk)
+	notification = Notification.objects.get(user=pk, notif_type=1, friend_id=request.user)
+	notification.status = False
+	notification.save()
 	if request.GET.get("confirm", False) == 1:
 		result = FriendsList.add_friend(Profile.objects.get(user=request.user), friend) if friend else False
 		if result:
