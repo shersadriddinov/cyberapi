@@ -87,18 +87,23 @@ def confirm_friendship(request, pk):
 
 	:param request - user request object
 	:param pk - friend's user id
+	:param confirm - boolean (1 - True, 0 -False) to add frien or ignore
 	:return json containing result (added or already in your friend list)
 	"""
 	response = dict()
 	friend = Profile.objects.get(user=pk)
-	result = FriendsList.add_friend(Profile.objects.get(user=request.user), friend) if friend else False
-	if result:
-		send_to_socket({"action": "friend_request_confirm", "friend": request.user.id, "uuid": friend.id})
-		response['detail'] = "User added to friends list"
-		response_status = status.HTTP_201_CREATED
+	if request.GET.get("confirm", False) == 1:
+		result = FriendsList.add_friend(Profile.objects.get(user=request.user), friend) if friend else False
+		if result:
+			send_to_socket({"action": "friend_request_confirm", "friend": request.user.id, "uuid": friend.id})
+			response['detail'] = "User added to friends list"
+			response_status = status.HTTP_201_CREATED
+		else:
+			response['detail'] = "User already in friends list"
+			response_status = status.HTTP_409_CONFLICT
 	else:
-		response['detail'] = "User already in friends list"
-		response_status = status.HTTP_409_CONFLICT
+		response['detail'] = "Friend Request ignored"
+		response_status = status.HTTP_200_OK
 	return Response(data=response, status=response_status)
 
 
