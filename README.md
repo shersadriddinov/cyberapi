@@ -399,7 +399,6 @@ Returns a list containing all active notifications. Use it after every connectio
 	"action": "notification"
 }
 ```
-<br />
 Method: **GET**
 <br />
 http://127.0.0.1:8000/api/socket/connect/
@@ -408,15 +407,13 @@ http://127.0.0.1:8000/api/socket/connect/
 <br />
 ```json
 {
-	{
-        "id": 3,
-        "date_created": "2020-07-20T21:49:28.882307+05:00",
-        "notif_type": 1,
-        "message": null,
-        "status": true,
-        "user": 49,
-        "friend_id": 48
-    }
+    "id": 3,
+    "date_created": "2020-07-20T21:49:28.882307+05:00",
+    "notif_type": 1,
+    "message": null,
+    "status": true,
+    "user": 49,
+    "friend_id": 48
 }
 ```
 
@@ -431,10 +428,9 @@ On **POST** you will create a friend request
 <br/>
 ```json
 {
-	"friend": 48 
+	"friend": 48
 }
 ```
-<br/>
 http://127.0.0.1:8000/api/socket/friend/request/
 <br />
 **Return**
