@@ -13,6 +13,9 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
+from socket_handler.models import *
+from socket_handler.serializers import *
+
 
 NewUser = namedtuple('NewUser', ('user', 'token'))
 WeaponAddon = namedtuple('WeaponAddon', ('weapon', 'stock', 'barrel', 'muzzle', 'mag', 'scope', 'grip'))
@@ -378,40 +381,6 @@ class UsersList(generics.ListAPIView):
 		return query
 
 
-@api_view(["PUT"])
-@permission_classes([IsUserTokenBelongToUser])
-def add_friend(request, pk):
-	"""
-
-	"""
-	response = dict()
-	friend = Profile.objects.get(pk, False)
-	result = FriendsList.add_friend(request.user, friend) if friend else False
-	if result:
-		response['detail'] = "User added to friends list"
-		response_status = status.HTTP_201_CREATED
-	else:
-		response['detail'] = "User already in friends list"
-		response_status = status.HTTP_409_CONFLICT
-	return Response(data=response, status=response_status)
-
-
-@api_view(["PUT"])
-@permission_classes([IsUserTokenBelongToUser])
-def remove_friend(request, pk):
-	"""
-
-	"""
-	response = dict()
-	friend = Profile.objects.get(pk, False)
-	result = FriendsList.remove_friend(request.user, friend) if friend else False
-	if result:
-		response['detail'] = "User removed from friends list"
-		response_status = status.HTTP_201_CREATED
-	else:
-		response['detail'] = "User does not present in friends list"
-		response_status = status.HTTP_409_CONFLICT
-	return Response(data=response, status=response_status)
 
 
 
