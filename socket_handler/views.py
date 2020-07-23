@@ -87,12 +87,12 @@ def confirm_friendship(request, pk):
 
 	:param request - user request object
 	:param pk - friend's user id
-	:param confirm - boolean (1 - True, 0 -False) to add frien or ignore
+	:param confirm - boolean (1 - True, 0 -False) to add friend or ignore
 	:return json containing result (added or already in your friend list)
 	"""
 	response = dict()
 	friend = Profile.objects.get(user=pk)
-	notification = Notification.objects.get(user=pk, notif_type=1, friend_id=request.user)
+	notification = Notification.objects.get(user=request.user, notif_type=1, friend_id=pk)
 	notification.status = False
 	notification.save()
 	if request.GET.get("confirm", False) == 1:
