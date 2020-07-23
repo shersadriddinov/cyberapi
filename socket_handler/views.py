@@ -95,7 +95,7 @@ def confirm_friendship(request, pk):
 	notification = Notification.objects.get(user=request.user, notif_type=1, friend_id=pk)
 	notification.status = False
 	notification.save()
-	if request.GET.get("confirm", False) == 1:
+	if int(request.GET.get("confirm", False)) == 1:
 		result = FriendsList.add_friend(Profile.objects.get(user=request.user), friend) if friend else False
 		if result:
 			send_to_socket({"action": "friend_request_confirm", "friend": request.user.id, "uuid": friend.id})
