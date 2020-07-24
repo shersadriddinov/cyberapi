@@ -203,6 +203,11 @@ class CharacterListView(generics.ListAPIView):
 			query = Character.objects.filter(hidden=False).order_by(order)
 		return query
 
+	def list(self, request, *args, **kwargs):
+		CharacterTuple = namedtuple('CharacterTuple', ('characters',))
+		response = CharacterUnrealSerializer(CharacterTuple(characters=self.get_queryset()))
+		return Response(response.data)
+
 
 class CharacterView(generics.RetrieveDestroyAPIView):
 	"""
@@ -279,6 +284,11 @@ class WeaponListView(generics.ListAPIView):
 		else:
 			query = Weapon.objects.filter(hidden=False).order_by(order)
 		return query
+
+	def list(self, request, *args, **kwargs):
+		WeaponTuple = namedtuple('WeaponTuple', ('weapons',))
+		response = WeaponUnrealSeializer(WeaponTuple(weapons=self.get_queryset()))
+		return Response(response.data)
 
 
 class WeaponView(generics.RetrieveDestroyAPIView):
@@ -383,6 +393,10 @@ class UsersList(generics.ListAPIView):
 			query = User.objects.filter(is_active=True, is_staff=False).order_by(order)
 		return query
 
+	def list(self, request, *args, **kwargs):
+		UserTuple = namedtuple('UserTuple', ('users',))
+		response = UserUnrealSerializer(UserTuple(users=self.get_queryset()))
+		return Response(response.data)
 
 
 
