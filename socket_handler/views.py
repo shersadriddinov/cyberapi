@@ -1,3 +1,4 @@
+from collections import namedtuple
 from v1.models import *
 from socket_handler.models import *
 from socket_handler.serializers import *
@@ -20,7 +21,6 @@ class NotificationView(generics.ListAPIView):
 	:return json containing list of notifications
 	"""
 	permission_classes = (IsAuthenticated,)
-	serializer_class = NotificationSerializer
 
 	def get_queryset(self):
 		query = Notification.objects.filter(user=self.request.user, status=True)
@@ -29,6 +29,11 @@ class NotificationView(generics.ListAPIView):
 				item.status = False
 				item.save()
 		return query
+
+	def list(self, request, *args, **kwargs):
+		NotificationTuple = namedtuple('NotificationTuple', ('notifications',))
+		response = NotificationUnrealSerializer(NotificationTuple(notifications=self.get_queryset()))
+		return Response(response.data)
 
 
 class FriendNotificationView(generics.ListCreateAPIView):

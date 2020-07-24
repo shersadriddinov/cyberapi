@@ -63,6 +63,10 @@ class UserListSerializer(serializers.ModelSerializer):
 		fields = ("id", "username", "first_name", "client_settings_json")
 
 
+class UserUnrealSerializer(serializers.Serializer):
+	users = UserListSerializer(many=True)
+
+
 class NewUserSerializer(serializers.Serializer):
 	"""
 
@@ -81,6 +85,10 @@ class CharacterSerializer(serializers.ModelSerializer):
 		fields = ("id", "tech_name", "default")
 
 
+class CharacterUnrealSerializer(serializers.Serializer):
+	characters = CharacterSerializer(many=True)
+
+
 class WeaponSerializer(serializers.ModelSerializer):
 	"""
 
@@ -89,6 +97,10 @@ class WeaponSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Weapon
 		fields = ("id", "tech_name", "default")
+
+
+class WeaponUnrealSeializer(serializers.Serializer):
+	weapons = WeaponSerializer(many=True)
 
 
 class AddonSerializer(serializers.Serializer):

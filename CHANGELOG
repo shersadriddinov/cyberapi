@@ -57,3 +57,7 @@
 + `UPDATE` View: remove_friend moved to socket_handler
 + `NEW` Utils: send_to_socket function created to make connection to web socket and quickly send updates
 + `NEW` View: FriendNotificationView created to list all friend request on GET and to create friend request on POST enabling web socket
+
+## Release 0.0.8
+24-07-2020
++ `UPDATE` View: All list serializers formatted for Unreal Engine requirements
