@@ -174,6 +174,51 @@ _user_only_ -  boolean flag (1 - True, otherwise always False) to get list of fr
 }
 ```
 
+## Search
+Returns a list containing active non-staff user's matched given query
+<br />
+http://127.0.0.1:8000/api/user/search/
+<br />
+Method: **GET**
+<br />
+**PARAMS**
+<br />
+_order_ - order of returned list, you can use `date_joined`, `username`, `last_login` or any other param. Use `-` before param (`-date_joined`) to get DESC order
+<br />
+_limit_ - limit list results to certain number (optional) if not used whole list will be returned
+<br />
+_offset_ - you can use it skip some number of results you already used. (optional)
+<br />
+_user_only_ -  boolean flag (1 - True, otherwise always False) to search in list of friends of the User
+<br />
+_query_ - the string for searching in user names
+**Return**
+<br />
+```json
+{
+    "users": [
+        {
+            "id": 49,
+            "username": "user2",
+            "first_name": "",
+            "client_settings_json": null
+        },
+        {
+            "id": 48,
+            "username": "user1",
+            "first_name": "",
+            "client_settings_json": null
+        },
+        {
+            "id": 5,
+            "username": "default_user",
+            "first_name": "",
+            "client_settings_json": null
+        }
+    ]
+}
+```
+
 ## Character List
 Returns list containing information about all current available character, id `user_only` parameter passed, returns the
 list of character belonging to user, whose token used

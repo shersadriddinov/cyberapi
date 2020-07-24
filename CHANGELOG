@@ -61,3 +61,4 @@
 ## Release 0.0.8
 24-07-2020
 + `UPDATE` View: All list serializers formatted for Unreal Engine requirements
++ `NEW` View: Added Search View request

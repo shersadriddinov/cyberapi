@@ -386,9 +386,8 @@ class UsersList(generics.ListAPIView):
 		user_only = self.request.query_params.get('user_only', False)
 
 		if self.request.user and user_only == "1":
-			profile = Profile.objects.get(user=self.request.user)
-			friends = FriendsList.objects.filter(profile=profile).values_list('friend', flat=True)
-			query = User.objects.filter(is_active=True, is_staff=False, pk__in=friends).order_by(order)
+			friends = FriendsList.objects.filter(profile__user=self.request.user).values_list('friend', flat=True)
+			query = User.objects.filter(is_active=True, is_staff=False, profile__in=friends).order_by(order)
 		else:
 			query = User.objects.filter(is_active=True, is_staff=False).order_by(order)
 		return query
@@ -399,5 +398,34 @@ class UsersList(generics.ListAPIView):
 		return Response(response.data)
 
 
+class UserSearchView(generics.ListAPIView):
+	"""
+	Returns a list containing active non-staff user's matched given query
+
+	:param query - the string for searching in user names
+	:param user_only - boolean flag (1 - True, otherwise always False) to search in list of friends of the User
+	:param order - order of returned list, you can use `date_joined`, `username`, `last_login` or any other param.
+	Use `-` before param (`-date_joined`) to get DESC order
+	:param limit - limit list results to certain number (optional) if not used whole list will be returned
+	:param offset - you can use it skip some number of results you already used. (optional)
+	:return json containing list of users
+	"""
+	serializer_class = UserListSerializer
+	pagination_class = LimitOffsetPagination
+
+	def get_queryset(self):
+		order = self.request.query_params.get('order', '-date_joined')
+		user_only = int(self.request.query_params.get('user_only', False))
+		query = self.request.query_params.get(u'query')
+		if self.request.user and user_only == 1:
+			friends_list = FriendsList.objects.filter(profile__user=self.request.user, friend__user__username__contains=query).values_list('friend', flat=True)
+			return User.objects.filter(is_active=True, is_staff=False, profile__in=friends_list).order_by(order)
+		else:
+			return User.objects.filter(username__contains=query, is_active=True, is_staff=False).order_by(order)
+
+	def list(self, request, *args, **kwargs):
+		UserTuple = namedtuple('UserTuple', ('users',))
+		response = UserUnrealSerializer(UserTuple(users=self.get_queryset()))
+		return Response(response.data)
 
 
