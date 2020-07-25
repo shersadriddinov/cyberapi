@@ -49,6 +49,11 @@ class FriendNotificationView(generics.ListCreateAPIView):
 	def get_queryset(self):
 		return Notification.objects.filter(user=self.request.user, notif_type=1, status=True)
 
+	def list(self, request, *args, **kwargs):
+		FriendRequestTuple = namedtuple('FriendRequestTuple', ('friend_requests',))
+		response = NotificationUnrealSerializer(FriendRequestTuple(friend_requests=self.get_queryset()))
+		return Response(response.data)
+
 	def create(self, request, *args, **kwargs):
 		response = dict()
 		friend = User.objects.get(pk=request.data.get('friend'))
