@@ -418,10 +418,10 @@ class UserSearchView(generics.ListAPIView):
 		user_only = int(self.request.query_params.get('user_only', False))
 		query = self.request.query_params.get(u'query')
 		if self.request.user and user_only == 1:
-			friends_list = FriendsList.objects.filter(profile__user=self.request.user, friend__user__username__contains=query).values_list('friend', flat=True)
+			friends_list = FriendsList.objects.filter(profile__user=self.request.user, friend__user__first_name__contains=query).values_list('friend', flat=True)
 			return User.objects.filter(is_active=True, is_staff=False, profile__in=friends_list).order_by(order)
 		else:
-			return User.objects.filter(username__contains=query, is_active=True, is_staff=False).order_by(order)
+			return User.objects.filter(first_name__contains=query, is_active=True, is_staff=False).order_by(order)
 
 	def list(self, request, *args, **kwargs):
 		UserTuple = namedtuple('UserTuple', ('users',))
