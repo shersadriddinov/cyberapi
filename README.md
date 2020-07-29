@@ -436,7 +436,7 @@ http://127.0.0.1:8000/api/weapon/{id}/
 }
 ```
 
-## Notifications
+## Notifications List
 Returns a list containing all active notifications. Use it after every connection to web socket, and each time socket sends notification
 <br />
 ```json
@@ -461,6 +461,47 @@ http://127.0.0.1:8000/api/socket/connect/
     "friend_id": 48
 }
 ```
+
+## Notification Info, Edit, Delete
+Get, update, delete user notification, depending on requests's method used. Notification is identified by notification
+id passed.
+<br />
+use **GET** - to get info about notif
+<br />
+use **PUT** - to update notif status. Boolean (True or False)
+<br />
+use **DELETE** - to delete notif
+<br />
+http://127.0.0.1:8000/socket/notif/{notif id}/
+<br />
+Methods:
+<br />
+On **GET** you get notif info
+<br />
+On **PUT** you can update notif status by sending "status": False
+<br />
+On **DELETE** delete notif
+<br />
+**Return**
+<br />
+```json
+{
+    "id": 3,
+    "user": {
+        "id": 49,
+        "first_name": ""
+    },
+    "friend_id": {
+        "id": 48,
+        "first_name": ""
+    },
+    "date_created": "2020-07-20T21:49:28.882307+05:00",
+    "notif_type": 1,
+    "message": null,
+    "status": true
+}
+```
+<br />
 
 ## Friend Requests
 Get list of your friend requests or make friend request

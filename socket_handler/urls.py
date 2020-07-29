@@ -3,7 +3,9 @@ from django.urls import path
 from socket_handler import views
 
 urlpatterns = [
+	# Notifications
 	path('connect/', views.NotificationView.as_view()),
+	path('notif/<int:pk>/', views.NotificationDisableView.as_view()),
 
 	# Friend
 	path('friend/request/', views.FriendNotificationView.as_view()),

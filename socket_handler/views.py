@@ -23,17 +23,40 @@ class NotificationView(generics.ListAPIView):
 	permission_classes = (IsAuthenticated,)
 
 	def get_queryset(self):
-		query = Notification.objects.filter(user=self.request.user, status=True)
-		for item in query:
-			if item.notif_type not in [1, ]:
-				item.status = False
-				item.save()
-		return query
+		return Notification.objects.filter(user=self.request.user, status=True)
 
 	def list(self, request, *args, **kwargs):
 		NotificationTuple = namedtuple('NotificationTuple', ('notifications',))
 		response = NotificationUnrealSerializer(NotificationTuple(notifications=self.get_queryset()))
 		return Response(response.data)
+
+
+class NotificationDisableView(generics.RetrieveUpdateDestroyAPIView):
+	"""
+	Get, update, delete user notification, depending on requests's method used. Notification is identified by notification
+	id passed.
+	use **GET** - to get info about notif
+	use **PUT** - to update status of notification
+	use **DELETE** - to delete notif
+
+	:param status - boolean True or False
+	:return json containing user information
+	"""
+
+	serializer_class = NotificationSerializer
+	permission_classes = (IsAuthenticated, )
+	lookup_field = "pk"
+	queryset = Notification.objects.filter(status=True)
+
+	def update(self, request, *args, **kwargs):
+		notif = self.get_object()
+		notif_status = bool(request.data.get('status', True))
+
+		notif.status = notif_status
+		notif.save()
+
+		response = NotificationSerializer(notif, context={"request": request})
+		return Response(response.data, status=status.HTTP_202_ACCEPTED)
 
 
 class FriendNotificationView(generics.ListCreateAPIView):
