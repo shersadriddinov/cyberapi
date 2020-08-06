@@ -410,3 +410,38 @@ class UserWeapon(models.Model):
 
 	def __str__(self):
 		return self.profile.user.username + " with " + self.weapon_with_addons.weapon.tech_name
+
+
+class UserWeaponConfig(models.Model):
+	"""
+	Many to Many model for :model:`UserWeapon` and to addons. Represents User's Weapon with its addons combinations
+	defined by user
+	"""
+	weapon = models.ForeignKey(UserWeapon, on_delete=models.CASCADE, verbose_name=_("User Weapon"), )
+	date_created = models.DateTimeField(verbose_name=_("Date Created"), default=timezone.now)
+	stock = models.ForeignKey(Stock, on_delete=models.SET_NULL, verbose_name=_("Stock"), null=True)
+	barrel = models.ForeignKey(Barrel, on_delete=models.SET_NULL, verbose_name=_("Barrel"), null=True)
+	muzzle = models.ForeignKey(Muzzle, on_delete=models.SET_NULL, verbose_name=_("Muzzle"), null=True)
+	mag = models.ForeignKey(Mag, on_delete=models.SET_NULL, verbose_name=_("Magazine"), null=True)
+	scope = models.ForeignKey(Scope, on_delete=models.SET_NULL, verbose_name=_("Scope"), null=True)
+	grip = models.ForeignKey(Grip, on_delete=models.SET_NULL, verbose_name=_("Grip"), null=True)
+
+	class Meta:
+		db_table = "profile_weapon_config"
+		verbose_name = _("User Weapons Configuration")
+		verbose_name_plural = _("User Weapons Configuration")
+		ordering = ("-date_created", )
+
+	def __str__(self):
+		return self.weapon.profile.user.username + " config " + str(self.id)
+
+	def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+		if (
+				self.stock.pk in self.weapon.user_addon_stock and
+				self.barrel.pk in self.weapon.user_addon_barrel and
+				self.muzzle.pk in self.weapon.user_addon_muzzle and
+				self.mag.pk in self.weapon.user_addon_mag and
+				self.scope.pk in self.weapon.user_addon_scope and
+				self.grip.pk in self.weapon.user_addon_grip
+		):
+			super(UserWeaponConfig, self).save(force_insert, force_update, using, update_fields)

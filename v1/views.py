@@ -429,3 +429,16 @@ class UserSearchView(generics.ListAPIView):
 		return Response(response.data)
 
 
+class UserConfigView(generics.ListAPIView):
+	"""
+
+	"""
+	pass
+
+
+class UserConfigUpdateView(generics.RetrieveUpdateDestroyAPIView):
+	"""
+
+	"""
+	pass
+
