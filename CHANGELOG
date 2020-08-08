@@ -62,3 +62,15 @@
 24-07-2020
 + `UPDATE` View: All list serializers formatted for Unreal Engine requirements
 + `NEW` View: Added Search View request
+
+## Release 0.0.9
+08-07-2020
++ `NEW` Model: User Weapon Configurations model with addons on certain user weapon
++ `NEW` Model: User Weapon Config on save rule to avoid adding non users addons to user config
++ `NEW` View: User configs list view
++ `NEW` View: User configs single view
++ `NEW` View: Update certain config
++ `NEW` View: Delete certain config
++ `NEW` Admin: Added Inline for `Profile & Weapon` containing user's configs for this weapon
++ `NEW` Admin: Added `User Weapon Config` view
++ `NEW` Signal: Added auto combining default addons into default weapon when user created

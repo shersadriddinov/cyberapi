@@ -429,16 +429,62 @@ class UserSearchView(generics.ListAPIView):
 		return Response(response.data)
 
 
-class UserConfigView(generics.ListAPIView):
+class UserConfigView(generics.ListCreateAPIView):
 	"""
+	Get list of your weapons configs or make create one
 
+	use **GET** for list of configs
+	use **POST** for creating user config, send json containing ids of weapon, stock, barrel, muzzle, mag, grip, scope
 	"""
-	pass
+	serializer_class = UserWeaponConfigSerializer
+	pagination_class = LimitOffsetPagination
+
+	def get_queryset(self):
+		order = self.request.query_params.get('order', '-date_created')
+		return UserWeaponConfig.objects.filter(weapon__profile__user=self.request.user).order_by(order)
+
+	def list(self, request, *args, **kwargs):
+		ConfigTuple = namedtuple('ConfigTuple', ('configs',))
+		response = UserWeaponConfigUnrealSerializer(ConfigTuple(configs=self.get_queryset()))
+		return Response(response.data)
 
 
 class UserConfigUpdateView(generics.RetrieveUpdateDestroyAPIView):
 	"""
+	Get, update, delete user weapon config, depending on request's method used. Config is identified by configs
+	id passed.
+	use **GET** - to get info about config
+	use **PUT** - to update config field
+	use **DELETE** - to delete config
 
+	:param order - order of returned list, you can use `date_created`
+	:return json containing user weapon config information
 	"""
-	pass
+	serializer_class = UserWeaponConfigSerializer
+	queryset = UserWeaponConfig.objects.all()
+	lookup_field = "pk"
+
+	def update(self, request, *args, **kwargs):
+		config = self.get_object()
+		stock = request.data.get('stock', False)
+		barrel = request.data.get('barrel', False)
+		muzzle = request.data.get('muzzle', False)
+		mag = request.data.get('mag', False)
+		grip = request.data.get('grip', False)
+		scope = request.data.get('scope', False)
+
+		config.stock = Stock.objects.get(pk=stock) if stock else config.stock
+		config.barrel = Barrel.objects.get(pk=barrel) if barrel else config.barrel
+		config.muzzle = Muzzle.objects.get(pk=muzzle) if muzzle else config.muzzle
+		config.mag = Mag.objects.get(pk=mag) if mag else config.mag
+		config.grip = Grip.objects.get(pk=grip) if grip else config.grip
+		config.scope = Scope.objects.get(pk=scope) if scope else config.scope
+
+		result = config.save()
+		if result:
+			response = UserWeaponConfigSerializer(config, context={"request": request})
+			return Response(response.data, status=status.HTTP_202_ACCEPTED)
+		else:
+			response = {"detail": "User does not have such addon"}
+		return Response(response, status=status.HTTP_400_BAD_REQUEST)
 

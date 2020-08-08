@@ -445,3 +445,6 @@ class UserWeaponConfig(models.Model):
 				self.grip.pk in self.weapon.user_addon_grip
 		):
 			super(UserWeaponConfig, self).save(force_insert, force_update, using, update_fields)
+			return True
+		else:
+			return False

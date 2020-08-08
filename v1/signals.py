@@ -49,7 +49,8 @@ def add_default_weapon_for_all(sender, instance, **kwargs):
 @receiver(post_save, sender=UserWeapon)
 def create_weapon_with_addons(sender, instance, created, **kwargs):
 	"""
-	Auto add all default and not hidden addons for each :model:`UserWeapon` instance as a list of ids
+	Auto add all default and not hidden addons for each :model:`UserWeapon` instance as a list of ids. Also adds default
+	config
 	"""
 	if created:
 		instance.user_addon_stock = list(instance.weapon_with_addons.stock.filter(default=True, hidden=False).values_list('id', flat=True))

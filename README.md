@@ -567,6 +567,97 @@ http://127.0.0.1:8000/api/friend/remove/{user_id}/
 }
 ```
 
+## Configuration Info, Edit, Delete
+Get, update, delete user weapon configuration, depending on request's method used. Config is identified by config's
+id passed.
+<br />
+use **GET** - to get info about config
+<br />
+use **PUT** - to update config status. Boolean (True or False)
+<br />
+use **DELETE** - to delete config
+<br />
+http://127.0.0.1:8000/api/user/config/{config id}/
+<br />
+Methods:
+<br />
+On **GET** you get config info
+<br />
+On **PUT** you can update config
+<br />
+On **DELETE** delete config
+<br />
+**Return**
+<br />
+```json
+{
+    "id": 2,
+    "date_created": "2020-08-07T01:45:02.477335+05:00",
+    "weapon": 19,
+    "stock": 1,
+    "barrel": 1,
+    "muzzle": 2,
+    "mag": 1,
+    "scope": 1,
+    "grip": 1
+}
+```
+<br />
+
+## Configs Lists
+Get list of your weapon configs or create user weapon config
+<br/>
+Methods:
+<br/>
+On **GET** you will receive list of your weapon config
+<br/>
+On **POST** you will create config for your weapon
+<br/>
+```json
+{
+    "weapon": 19,
+    "stock": 1,
+    "barrel": 1,
+    "muzzle": 1,
+    "mag": 1,
+    "grip": 1,
+    "scope": 1
+}
+```
+http://127.0.0.1:8000/api/user/config/list/
+<br />
+**Return**
+<br />
+```json
+{
+    "configs": [
+        {
+            "id": 2,
+            "date_created": "2020-08-07T01:45:02.477335+05:00",
+            "weapon": 19,
+            "stock": 1,
+            "barrel": 1,
+            "muzzle": 2,
+            "mag": 1,
+            "scope": 1,
+            "grip": 1
+        },
+        {
+            "id": 3,
+            "date_created": "2020-08-08T19:15:28.842685+05:00",
+            "weapon": 19,
+            "stock": 1,
+            "barrel": 1,
+            "muzzle": 1,
+            "mag": 1,
+            "scope": 1,
+            "grip": 1
+        }
+    ]
+}
+```
+
+
 ## Authorization - `unnecessary`
 All requests to API are made through API Token Authorization. To get token send following request
 <br />
