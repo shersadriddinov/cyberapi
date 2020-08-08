@@ -81,7 +81,13 @@ class WeaponAddonsAdmin(admin.ModelAdmin):
 	empty_value_display = '-empty-'
 
 
+class UserWeaponConfigInline(admin.TabularInline):
+	model = UserWeaponConfig
+	extra = 0
+
+
 class UserWeaponAdmin(admin.ModelAdmin):
+	inlines = (UserWeaponConfigInline, )
 	list_display = ("id", "__str__", "weapon_with_addons", "date_added")
 	list_display_links = ("id", "__str__")
 	list_select_related = True
@@ -102,6 +108,17 @@ class UserWeaponAdmin(admin.ModelAdmin):
 			)
 		})
 	)
+
+
+class UserWeaponConfigAdmin(admin.ModelAdmin):
+	list_display = ("id", "weapon", "date_created")
+	list_display_links = ("id", "weapon")
+	list_select_related = True
+	ordering = ("-date_created", )
+	date_hierarchy = "date_created"
+	readonly_fields = ("date_created",)
+	search_fields = ("weapon",)
+	empty_value_display = '-empty-'
 
 # For future unique fields 3 classes below created
 
@@ -134,3 +151,4 @@ admin.site.register(Scope, PlayItemAdmin)
 admin.site.register(Grip, PlayItemAdmin)
 admin.site.register(WeaponAddons, WeaponAddonsAdmin)
 admin.site.register(UserWeapon, UserWeaponAdmin)
+admin.site.register(UserWeaponConfig, UserWeaponConfigAdmin)

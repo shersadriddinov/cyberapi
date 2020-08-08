@@ -49,7 +49,8 @@ def add_default_weapon_for_all(sender, instance, **kwargs):
 @receiver(post_save, sender=UserWeapon)
 def create_weapon_with_addons(sender, instance, created, **kwargs):
 	"""
-	Auto add all default and not hidden addons for each :model:`UserWeapon` instance as a list of ids
+	Auto add all default and not hidden addons for each :model:`UserWeapon` instance as a list of ids. Also adds default
+	config
 	"""
 	if created:
 		instance.user_addon_stock = list(instance.weapon_with_addons.stock.filter(default=True, hidden=False).values_list('id', flat=True))
@@ -59,6 +60,15 @@ def create_weapon_with_addons(sender, instance, created, **kwargs):
 		instance.user_addon_scope = list(instance.weapon_with_addons.scope.filter(default=True, hidden=False).values_list('id', flat=True))
 		instance.user_addon_grip = list(instance.weapon_with_addons.grip.filter(default=True, hidden=False).values_list('id', flat=True))
 		instance.save()
+		UserWeaponConfig.objects.create(
+			weapon=instance,
+			stock=Stock.objects.get(pk=instance.user_addon_stock[0]),
+			barrel=Barrel.objects.get(pk=instance.user_addon_barrel[0]),
+			muzzle=Muzzle.objects.get(pk=instance.user_addon_muzzle[0]),
+			mag=Mag.objects.get(pk=instance.user_addon_mag[0]),
+			grip=Grip.objects.get(pk=instance.user_addon_grip[0]),
+			scope=Scope.objects.get(pk=instance.user_addon_scope[0])
+		)
 
 
 @receiver(post_save, sender=Profile)
@@ -71,5 +81,5 @@ def add_default_weapons_with_addons_to_new_user(sender, instance, created, **kwa
 		for weapon in default_weapons:
 			UserWeapon.objects.create(
 				profile=instance,
-				weapon_with_addons=weapon
+				weapon_with_addons=weapon,
 			)

@@ -137,3 +137,17 @@ class UserWeaponSerializer(serializers.ModelSerializer):
 			"user_addon_stock", "user_addon_barrel", "user_addon_muzzle",
 			"user_addon_mag", "user_addon_scope", "user_addon_grip"
 		)
+
+
+class UserWeaponConfigSerializer(serializers.ModelSerializer):
+	"""
+
+	"""
+
+	class Meta:
+		model = UserWeaponConfig
+		fields = "__all__"
+
+
+class UserWeaponConfigUnrealSerializer(serializers.Serializer):
+	configs = UserWeaponConfigSerializer(many=True)
