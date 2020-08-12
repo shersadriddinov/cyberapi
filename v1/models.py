@@ -361,6 +361,7 @@ class UserWeapon(models.Model):
 	date_added = models.DateTimeField(verbose_name=_("Date Added"), default=timezone.now)
 	user_addon_stock = ArrayField(
 		models.PositiveIntegerField(blank=True),
+		default=list,
 		null=True,
 		blank=True,
 		verbose_name=_('User Stock Addons'),
@@ -368,6 +369,7 @@ class UserWeapon(models.Model):
 	)
 	user_addon_barrel = ArrayField(
 		models.PositiveIntegerField(blank=True),
+		default=list,
 		null=True,
 		blank=True,
 		verbose_name=_('User Barrel Addons'),
@@ -375,6 +377,7 @@ class UserWeapon(models.Model):
 	)
 	user_addon_muzzle = ArrayField(
 		models.PositiveIntegerField(blank=True),
+		default=list,
 		null=True,
 		blank=True,
 		verbose_name=_('User Stock Muzzle'),
@@ -382,6 +385,7 @@ class UserWeapon(models.Model):
 	)
 	user_addon_mag = ArrayField(
 		models.PositiveIntegerField(blank=True),
+		default=list,
 		null=True,
 		blank=True,
 		verbose_name=_('User Mag Addons'),
@@ -389,6 +393,7 @@ class UserWeapon(models.Model):
 	)
 	user_addon_scope = ArrayField(
 		models.PositiveIntegerField(blank=True),
+		default=list,
 		null=True,
 		blank=True,
 		verbose_name=_('User Scope Addons'),
@@ -396,6 +401,7 @@ class UserWeapon(models.Model):
 	)
 	user_addon_grip = ArrayField(
 		models.PositiveIntegerField(blank=True),
+		default=list,
 		null=True,
 		blank=True,
 		verbose_name=_('User Grip Addons'),
