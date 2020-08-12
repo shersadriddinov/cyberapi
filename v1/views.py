@@ -291,7 +291,7 @@ class WeaponListView(generics.ListAPIView):
 		return Response(response.data)
 
 
-class WeaponView(generics.RetrieveDestroyAPIView):
+class WeaponView(generics.RetrieveUpdateDestroyAPIView):
 	"""
 	Get or delete weapon with addons from user, depending on requests's method used. User is identified by token used
 	in request.
@@ -323,6 +323,33 @@ class WeaponView(generics.RetrieveDestroyAPIView):
 			)
 			response = WeaponAddonSerializer(serializer, context={"request": request})
 		return Response(response.data, status=status.HTTP_200_OK)
+
+	def update(self, request, *args, **kwargs):
+		profile = Profile.objects.get(user=request.user)
+		weapon_with_addons = WeaponAddons.objects.get(weapon=self.get_object())
+		try:
+			user_weapon = UserWeapon.objects.get(profile=profile, weapon_with_addons=weapon_with_addons)
+		except ObjectDoesNotExist:
+			response = {"detail": "User does not have such weapon"}
+			return Response(response, status=status.HTTP_400_BAD_REQUEST)
+		else:
+			stock = request.data.get('stock', False)
+			barrel = request.data.get('barrel', False)
+			muzzle = request.data.get('muzzle', False)
+			mag = request.data.get('mag', False)
+			grip = request.data.get('grip', False)
+			scope = request.data.get('scope', False)
+
+			user_weapon.user_addon_stock.append(stock)
+			user_weapon.user_addon_barrel.append(barrel)
+			user_weapon.user_addon_muzzle.append(muzzle)
+			user_weapon.user_addon_mag.append(mag)
+			user_weapon.user_addon_grip.append(grip)
+			user_weapon.user_addon_scope.append(scope)
+
+			user_weapon.save()
+			response = UserWeaponSerializer(user_weapon, context={"request": request})
+			return Response(response.data, status=status.HTTP_202_ACCEPTED)
 
 	def destroy(self, request, *args, **kwargs):
 		response = dict()
