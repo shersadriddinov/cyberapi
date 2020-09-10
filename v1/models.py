@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import User
+from django.core.validators import ValidationError
 from rest_framework.authtoken.models import Token
 
 
@@ -58,6 +59,12 @@ class Character(PlayItem):
 
 	def __str__(self):
 		return self.tech_name
+
+	def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+		if self.default and Character.objects.filter(default=True).count() > 2:
+			raise ValidationError(_("More than 3 default characters, remove one before proceeding"))
+		else:
+			super(Character, self).save(force_insert, force_update, using, update_fields)
 
 
 class Weapon(PlayItem):
@@ -283,6 +290,7 @@ class UserCharacter(models.Model):
 	profile = models.ForeignKey(Profile, on_delete=models.CASCADE, verbose_name=_("User"))
 	character = models.ForeignKey(Character, on_delete=models.CASCADE, verbose_name=_("Character"))
 	date_added = models.DateTimeField(verbose_name=_("Date Added"), default=timezone.now)
+	main = models.BooleanField(verbose_name=_("Main Character"), default=False, blank=True)
 
 	class Meta:
 		db_table = "profile_character"

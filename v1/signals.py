@@ -83,3 +83,15 @@ def add_default_weapons_with_addons_to_new_user(sender, instance, created, **kwa
 				profile=instance,
 				weapon_with_addons=weapon,
 			)
+
+
+@receiver(post_save, sender=UserCharacter)
+def set_new_main_character(sender, instance, created, **kwargs):
+	"""
+	After making a character main check for previous main character and make in False if True
+	"""
+	if instance.main:
+		previous = UserCharacter.objects.filter(profile=instance.profile, main=True).exclude(pk=instance.pk).first()
+		if previous:
+			previous.main = False
+			previous.save()

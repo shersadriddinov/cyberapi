@@ -38,14 +38,13 @@ class GeneralUserSerializer(serializers.ModelSerializer):
 		fields = (
 			"id", "username", "first_name",
 			"email", "balance", "donate",
-			"karma", "client_settings_json"
+			"karma", "client_settings_json",
 		)
-		read_only_fields = ("balance", "donate", "karma")
+		read_only_fields = ("balance", "donate", "karma",)
 
 	def update(self, instance, validated_data):
 		profile = validated_data.get('profile', None)
 		if profile['client_settings_json']:
-			print(profile)
 			instance.profile.client_settings_json = profile['client_settings_json']
 			instance.profile.save()
 			del validated_data['profile']
@@ -67,14 +66,6 @@ class UserUnrealSerializer(serializers.Serializer):
 	users = UserListSerializer(many=True)
 
 
-class NewUserSerializer(serializers.Serializer):
-	"""
-
-	"""
-	user = GeneralUserSerializer()
-	token = TokenSerializer()
-
-
 class CharacterSerializer(serializers.ModelSerializer):
 	"""
 
@@ -83,6 +74,15 @@ class CharacterSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Character
 		fields = ("id", "tech_name", "default")
+
+
+class NewUserSerializer(serializers.Serializer):
+	"""
+
+	"""
+	user = GeneralUserSerializer()
+	token = TokenSerializer()
+	default_characters = CharacterSerializer(many=True)
 
 
 class CharacterUnrealSerializer(serializers.Serializer):
