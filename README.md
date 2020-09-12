@@ -129,6 +129,25 @@ password
 }
 ```
 
+## Add Default Character to User
+Functions one of the default characters as user's main character
+<br />
+Method: **PUT**
+<br />
+http://127.0.0.1:8000/api/user/setchar/{character id}
+<br />
+**Params**
+<br />
+character id = {_character_id_}
+<br />
+**Return**
+<br />
+```json
+{
+    "detail": "Successfully added character to user and settled as its default"
+}
+```
+
 ## User Info, Edit, Delete
 Get, update, delete user information, depending on request's method used. User is identified by user id passed.
 You cannot update user's token, balance, donate & karma with this request
