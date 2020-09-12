@@ -111,14 +111,15 @@ class UserWeaponAdmin(admin.ModelAdmin):
 
 
 class UserWeaponConfigAdmin(admin.ModelAdmin):
-	list_display = ("id", "weapon", "date_created")
+	list_display = ("id", "character", "weapon", "date_created")
 	list_display_links = ("id", "weapon")
 	list_select_related = True
 	ordering = ("-date_created", )
 	date_hierarchy = "date_created"
 	readonly_fields = ("date_created",)
-	search_fields = ("weapon",)
+	search_fields = ("weapon", "character")
 	empty_value_display = '-empty-'
+
 
 # For future unique fields 3 classes below created
 
