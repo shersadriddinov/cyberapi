@@ -17,7 +17,7 @@ from socket_handler.models import *
 from socket_handler.serializers import *
 
 
-NewUser = namedtuple('NewUser', ('user', 'token'))
+NewUser = namedtuple('NewUser', ('user', 'token', 'default_characters'))
 WeaponAddon = namedtuple('WeaponAddon', ('weapon', 'stock', 'barrel', 'muzzle', 'mag', 'scope', 'grip'))
 
 
@@ -52,6 +52,13 @@ def login(request, ):
 					'id': user.id,
 					'token': token.key,
 				}
+				try:
+					main_character = UserCharacter.objects.get(profile=user.profile, main=True).id
+					response['main_character'] = main_character
+				except UserCharacter.DoesNotExist:
+					main_character = Character.objects.filter(default=True)
+					main_character = [item.id for item in main_character]
+					response['default_characters_list'] = main_character
 				return Response(data=response, status=status.HTTP_200_OK)
 			else:
 				return Response(data={'detail': "Username or password didn't match"}, status=status.HTTP_404_NOT_FOUND)
@@ -116,7 +123,7 @@ class Auth(generics.CreateAPIView):
 			group = Group.objects.get(name="Players")
 			group.user_set.add(user)
 			token = Token.objects.get(user=user)
-			new_user = NewUser(user=user, token=token)
+			new_user = NewUser(user=user, token=token, default_characters=Character.objects.filter(default=True))
 			response = NewUserSerializer(new_user, context={'request': request})
 			return Response(response.data, status=status.HTTP_201_CREATED)
 		else:
@@ -148,6 +155,26 @@ class UserProfile(generics.RetrieveUpdateDestroyAPIView):
 	def get_queryset(self):
 		return User.objects.filter(is_active=True)
 
+	def get(self, request, *args, **kwargs):
+		user = self.get_object()
+		response = {
+			"id": user.id,
+			"username": user.username,
+			"first_name": user.first_name,
+			"email": user.email,
+			"balance": user.profile.balance,
+			"donate": user.profile.donate,
+			"karma": user.profile.karma,
+			"client_settings_json": user.profile.client_settings_json,
+		}
+		try:
+			main_character = UserCharacter.objects.get(profile=user.profile, main=True).id
+			response['main_character'] = main_character
+		except UserCharacter.DoesNotExist:
+			default_characters_list = [item.id for item in Character.objects.filter(default=True)]
+			response['default_characters_list'] = default_characters_list
+		return Response(data=response, status=status.HTTP_200_OK)
+
 	def update(self, request, *args, **kwargs):
 		user = self.get_object()
 		username = request.data.get('username', False)
@@ -155,6 +182,7 @@ class UserProfile(generics.RetrieveUpdateDestroyAPIView):
 		email = request.data.get('email', False)
 		client_settings_json = request.data.get('client_settings_json', False)
 		password = request.data.get('password', False)
+		main = int(request.data.get("main_character", False))
 
 		user.username = username if username else user.username
 		user.first_name = first_name if first_name else user.first_name
@@ -163,9 +191,30 @@ class UserProfile(generics.RetrieveUpdateDestroyAPIView):
 		if password:
 			user.set_password(password)
 		user.save()
+		try:
+			user_character = UserCharacter.objects.get(id=main)
+			user_character.main = True
+			user_character.save()
+		except UserCharacter.DoesNotExist:
+			return Response(data={"detail": "No such user weapon"}, status=status.HTTP_404_NOT_FOUND)
 
-		response = GeneralUserSerializer(user, context={"request": request})
-		return Response(response.data, status=status.HTTP_202_ACCEPTED)
+		response = {
+			"id": user.id,
+			"username": user.username,
+			"first_name": user.first_name,
+			"email": user.email,
+			"balance": user.profile.balance,
+			"donate": user.profile.donate,
+			"karma": user.profile.karma,
+			"client_settings_json": user.profile.client_settings_json,
+		}
+		try:
+			main_character = UserCharacter.objects.get(profile=user.profile, main=True).id
+			response['main_character'] = main_character
+		except UserCharacter.DoesNotExist:
+			default_characters_list = [item.id for item in Character.objects.filter(default=True)]
+			response['default_characters_list'] = default_characters_list
+		return Response(data=response, status=status.HTTP_200_OK)
 
 	def destroy(self, request, *args, **kwargs):
 		user = self.get_object()

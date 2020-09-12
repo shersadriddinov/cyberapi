@@ -74,3 +74,13 @@
 + `NEW` Admin: Added Inline for `Profile & Weapon` containing user's configs for this weapon
 + `NEW` Admin: Added `User Weapon Config` view
 + `NEW` Signal: Added auto combining default addons into default weapon when user created
+
+## Release 0.0.10
+12-09-2020
++ `NEW` Signal set_new_main_character(): sets new main character and removes old one
++ `UPDATE` Model UserCharacter: user's main character field
++ `UPDATE` View login(): returns user's main character
++ `UPDATE` View auth(): returns 3 default characters to choose
++ `UPDATE` View UserProfile.get(): return main character if settled, default characters if False
++ `UPDATE` View UserProfile.update(): new param `main_character` for PUT request to set new main character
++ `UPDATE` Model UserWeaponConfig: character param added

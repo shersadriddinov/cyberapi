@@ -31,8 +31,21 @@ password = {_password: example z709pa354rda_}
 <br />
 ```json
 {
-    "id": 30,
-    "token": "c1f2dfdbd89d892b7f16d9ce264bf500d72c01e0"
+    "id": 47,
+    "token": "240a9d1d7ee716c3639b93c7b86f71417a95006f",
+    "main_character": 5
+}
+```
+or if user didn't chosen main character, you will receive list of three default characters ids
+```json
+{
+    "id": 52,
+    "token": "ceeb4381c6d5733cb37e17a224dda00ed88cac9c",
+    "default_characters_list": [
+        5,
+        3,
+        2
+    ]
 }
 ```
 <br />
@@ -84,9 +97,9 @@ password
 ```json
 {
     "user": {
-        "id": 30,
-        "username": "lbadmin",
-        "first_name": "",
+        "id": 59,
+        "username": "user11",
+        "first_name": "WTF",
         "email": "sher.sadriddinov@gmail.com",
         "balance": 0,
         "donate": 0,
@@ -94,13 +107,30 @@ password
         "client_settings_json": null
     },
     "token": {
-        "key": "200a8007e8a9567cd3c37f16881021ebbe148ece"
-    }
+        "key": "4cbb482796718a489986baa093ea364ec357e26f"
+    },
+    "default_characters": [
+        {
+            "id": 5,
+            "tech_name": "President",
+            "default": true
+        },
+        {
+            "id": 3,
+            "tech_name": "CyborgRoman",
+            "default": true
+        },
+        {
+            "id": 2,
+            "tech_name": "MaleMut",
+            "default": true
+        }
+    ]
 }
 ```
 
 ## User Info, Edit, Delete
-Get, update, delete user information, depending on requests's method used. User is identified by user id passed.
+Get, update, delete user information, depending on request's method used. User is identified by user id passed.
 You cannot update user's token, balance, donate & karma with this request
 <br />
 use **GET** - to get info about user
@@ -123,14 +153,33 @@ On **DELETE** user profile moved to inactive state, data could be restored after
 <br />
 ```json
 {
-    "id": 30,
-    "username": "lbadmin",
-    "first_name": "",
+    "id": 47,
+    "username": "Obama",
+    "first_name": "Player4",
     "email": "sher.sadriddinov@gmail.com",
     "balance": 0,
     "donate": 0,
     "karma": 0,
-    "client_settings_json": null
+    "client_settings_json": null,
+    "main_character": 5
+}
+```
+or if user didn't chosen main character
+```json
+{
+    "id": 47,
+    "username": "Obama",
+    "first_name": "Player4",
+    "email": "sher.sadriddinov@gmail.com",
+    "balance": 0,
+    "donate": 0,
+    "karma": 0,
+    "client_settings_json": null,
+    "default_characters_list": [
+        5,
+        3,
+        2
+    ]
 }
 ```
 <br />
@@ -569,7 +618,7 @@ http://127.0.0.1:8000/api/friend/remove/{user_id}/
 
 ## Configuration Info, Edit, Delete
 Get, update, delete user weapon configuration, depending on request's method used. Config is identified by config's
-id passed.
+id passed. Character could be `null`
 <br />
 use **GET** - to get info about config
 <br />
@@ -594,6 +643,7 @@ On **DELETE** delete config
     "id": 2,
     "date_created": "2020-08-07T01:45:02.477335+05:00",
     "weapon": 19,
+    "character": 5,
     "stock": 1,
     "barrel": 1,
     "muzzle": 2,
@@ -605,7 +655,7 @@ On **DELETE** delete config
 <br />
 
 ## Configs Lists
-Get list of your weapon configs or create user weapon config
+Get list of your weapon configs or create user weapon config. Character could be `null`
 <br/>
 Methods:
 <br/>
@@ -616,6 +666,7 @@ On **POST** you will create config for your weapon
 ```json
 {
     "weapon": 19,
+    "character": 5,
     "stock": 1,
     "barrel": 1,
     "muzzle": 1,
@@ -635,6 +686,7 @@ http://127.0.0.1:8000/api/user/config/list/
             "id": 2,
             "date_created": "2020-08-07T01:45:02.477335+05:00",
             "weapon": 19,
+            "character": 5,
             "stock": 1,
             "barrel": 1,
             "muzzle": 2,
@@ -646,6 +698,7 @@ http://127.0.0.1:8000/api/user/config/list/
             "id": 3,
             "date_created": "2020-08-08T19:15:28.842685+05:00",
             "weapon": 19,
+            "character": 5,
             "stock": 1,
             "barrel": 1,
             "muzzle": 1,
