@@ -78,6 +78,7 @@
 ## Release 0.0.10
 12-09-2020
 + `NEW` Signal set_new_main_character(): sets new main character and removes old one
++ `NEW` View set_default_character: to choose default character to user
 + `UPDATE` Model UserCharacter: user's main character field
 + `UPDATE` View login(): returns user's main character
 + `UPDATE` View auth(): returns 3 default characters to choose

@@ -133,6 +133,28 @@ class Auth(generics.CreateAPIView):
 			return Response(data=response, status=status.HTTP_409_CONFLICT)
 
 
+@api_view(['PUT', ])
+@permission_classes([IsAuthenticated])
+def set_default_character(request, pk):
+	"""
+	Function to set default character that user has chosen
+
+	:param pk - id of the character
+	:return 200 OK
+	"""
+	try:
+		character = Character.objects.get(pk=pk)
+	except Character.DoesNotExist:
+		return Response(data={"detail": "Character doesn't exists"}, status=status.HTTP_404_NOT_FOUND)
+	else:
+		UserCharacter.objects.create(
+			profile=request.user.profile,
+			character=character,
+			main=True
+		)
+		return Response(data={"detail": "Successfully added character to user and settled as its default"}, status=status.HTTP_200_OK)
+
+
 class UserProfile(generics.RetrieveUpdateDestroyAPIView):
 	"""
 	Get, update, delete user information, depending on requests's method used. User is identified by user id passed.
