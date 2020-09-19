@@ -213,12 +213,13 @@ class UserProfile(generics.RetrieveUpdateDestroyAPIView):
 		if password:
 			user.set_password(password)
 		user.save()
-		try:
-			user_character = UserCharacter.objects.get(id=main)
-			user_character.main = True
-			user_character.save()
-		except UserCharacter.DoesNotExist:
-			return Response(data={"detail": "No such user weapon"}, status=status.HTTP_404_NOT_FOUND)
+		if main:
+			try:
+				user_character = UserCharacter.objects.get(id=main)
+				user_character.main = True
+				user_character.save()
+			except UserCharacter.DoesNotExist:
+				return Response(data={"detail": "No such user weapon"}, status=status.HTTP_404_NOT_FOUND)
 
 		response = {
 			"id": user.id,
