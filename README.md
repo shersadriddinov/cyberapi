@@ -390,6 +390,8 @@ http://127.0.0.1:8000/api/weapon/list/
 <br />
 _user_only_ - if set to 1, returns a list containing only user (whose token used) weapons
 <br />
+_slot_ - specifies a slot type to return, 0 - primary, 1 - secondary
+<br/>
 _order_ - order of returned list, you can use `date_created`, `tech_name` or any other param. Use `-` before param (`-date_joined`) to get DESC order
 <br />
 _limit_ - limit list results to certain number (optional) if not used whole list will be returned
@@ -610,7 +612,7 @@ http://127.0.0.1:8000/api/friend/add/{user_id}/
 <br />
 **PARAM**
 <br />
-confirm - boolean (1 - True, 0 -False) to add frien or ignore
+confirm - boolean (1 - True, 0 -False) to add friend or ignore
 <br />
 **Return**
 <br />
@@ -679,6 +681,10 @@ Get list of your weapon configs or create user weapon config. Character could be
 Methods:
 <br/>
 On **GET** you will receive list of your weapon config
+<br />
+**PARAMS**
+<br />
+_slot_ - specifies a slot type to return, 0 - primary, 1 - secondary
 <br/>
 On **POST** you will create config for your weapon
 <br/>
