@@ -72,6 +72,14 @@ class PlayItemAdmin(admin.ModelAdmin):
 		super().save_model(request, obj, form, change)
 
 
+class WeaponAdmin(PlayItemAdmin):
+	fieldsets = (
+		(None, {
+			'fields': ('tech_name', 'date_created', 'slot', ('default', 'hidden'))
+		}),
+	)
+
+
 class WeaponAddonsAdmin(admin.ModelAdmin):
 	list_display = ("__str__", )
 	filter_horizontal = ("stock", "barrel", "muzzle", "mag", "scope", "grip")
@@ -128,10 +136,6 @@ class CharacterAdmin(PlayItemAdmin):
 	pass
 
 
-class WeaponAdmin(PlayItemAdmin):
-	pass
-
-
 class AddonAdmin(PlayItemAdmin):
 	pass
 
@@ -143,7 +147,7 @@ admin.site.unregister(User)
 admin.site.register(Profile, ProfileAdmin)
 admin.site.register(User, UserAdmin)
 admin.site.register(Character, PlayItemAdmin)
-admin.site.register(Weapon, PlayItemAdmin)
+admin.site.register(Weapon, WeaponAdmin)
 admin.site.register(Stock, PlayItemAdmin)
 admin.site.register(Barrel, PlayItemAdmin)
 admin.site.register(Muzzle, PlayItemAdmin)

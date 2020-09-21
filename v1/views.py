@@ -337,6 +337,7 @@ class WeaponListView(generics.ListAPIView):
 	identified by token used for this request
 
 	:param user_only - boolean flag (1 - True, otherwise always False) to get weapons of User or all weapons
+	:param slot - specifies a slot type to return, 0 - primary, 1 - secondary
 	:param order - order of returned list, you can use `date_created`, `tech_name`, or any other param.
 	Use `-` before param (`-date_joined`) to get DESC order
 
@@ -347,15 +348,19 @@ class WeaponListView(generics.ListAPIView):
 
 	def get_queryset(self):
 		user_only = self.request.query_params.get('user_only', False)
+		slot = self.request.query_params.get('slot', False)
 		order = self.request.query_params.get('order', '-date_created')
 
 		if self.request.user and user_only == "1":
-			profile = Profile.objects.get(user=self.request.user)
-			user_weapon = UserWeapon.objects.filter(profile=profile).values_list('weapon_with_addons', flat=True)
-			query = Weapon.objects.filter(pk__in=user_weapon, hidden=False).order_by(order)
+			user_weapon = UserWeapon.objects.filter(profile=self.request.user.profile).values_list('weapon_with_addons', flat=True)
+			query = Weapon.objects.filter(pk__in=user_weapon, hidden=False)
 		else:
-			query = Weapon.objects.filter(hidden=False).order_by(order)
-		return query
+			query = Weapon.objects.filter(hidden=False)
+
+		if slot:
+			query = query.filter(slot=int(slot))
+
+		return query.order_by(order)
 
 	def list(self, request, *args, **kwargs):
 		WeaponTuple = namedtuple('WeaponTuple', ('weapons',))
@@ -540,7 +545,11 @@ class UserConfigView(generics.ListCreateAPIView):
 
 	def get_queryset(self):
 		order = self.request.query_params.get('order', '-date_created')
-		return UserWeaponConfig.objects.filter(weapon__profile__user=self.request.user).order_by(order)
+		slot = self.request.query_params.get('slot', False)
+		query = UserWeaponConfig.objects.filter(weapon__profile__user=self.request.user)
+		if slot:
+			query = query.filter(weapon__weapon_with_addons__weapon__slot=int(slot))
+		return query.order_by(order)
 
 	def list(self, request, *args, **kwargs):
 		ConfigTuple = namedtuple('ConfigTuple', ('configs',))

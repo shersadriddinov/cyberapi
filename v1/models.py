@@ -67,10 +67,17 @@ class Character(PlayItem):
 			super(Character, self).save(force_insert, force_update, using, update_fields)
 
 
+SLOTS = (
+	(0, _("primary")),
+	(1, _("secondary"))
+)
+
+
 class Weapon(PlayItem):
 	"""
 	All weapons available in game, inherits from :model:`PlayItem`
 	"""
+	slot = models.PositiveSmallIntegerField(verbose_name=_("Slot"), choices=SLOTS, default=0, blank=False)
 
 	class Meta:
 		db_table = "weapon"

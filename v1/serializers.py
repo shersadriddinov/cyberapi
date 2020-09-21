@@ -96,7 +96,7 @@ class WeaponSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Weapon
-		fields = ("id", "tech_name", "default")
+		fields = ("id", "tech_name", "default", "slot")
 
 
 class WeaponUnrealSeializer(serializers.Serializer):

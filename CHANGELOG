@@ -85,3 +85,11 @@
 + `UPDATE` View UserProfile.get(): return main character if settled, default characters if False
 + `UPDATE` View UserProfile.update(): new param `main_character` for PUT request to set new main character
 + `UPDATE` Model UserWeaponConfig: character param added
+
+## Release 0.0.11
+21-09-2020
++ `UPDATE` Model Weapon: slot type added
++ `UPDATE` Admin WeaponAdmin: slot field added
++ `UPDATE` View WeaponListView: filter by slot added
++ `UPDATE` View UserConfigView: filter by slot added
+
