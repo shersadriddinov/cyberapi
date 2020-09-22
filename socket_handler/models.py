@@ -1,3 +1,6 @@
+import binascii
+import os
+
 from django.db import models
 from django.utils import timezone
 from django.core.exceptions import ValidationError
@@ -50,3 +53,98 @@ class Notification(models.Model):
 
 	def __str__(self):
 		return "NOTIF-" + str(self.notif_type) + "-" + str(self.id)
+
+
+SERVER_STATUS = (
+	(0, _("Waiting for players")),
+	(1, _("Game in process")),
+	(2, _("Game finished")),
+	(3, _("Ready for close"))
+)
+
+SERVER_TYPE = (
+	(0, _("public")),
+	(1, _("private"))
+)
+
+MATCH_TYPE = (
+	(0, _("casual")),
+)
+
+
+def validate_port(value):
+	if value > 65535:
+		raise ValidationError(
+			_('%(value)s is not port number'),
+			params={'value': value},
+		)
+
+
+class Server(models.Model):
+	host_address = models.GenericIPAddressField(
+		null=False,
+		blank=False,
+		help_text=_("IP address accepts both IPv4, IPv6"),
+		verbose_name=_("Host address")
+	)
+	port = models.PositiveIntegerField(
+		verbose_name=_("Port"),
+		validators=(validate_port, ),
+		null=False,
+		default=8080,
+		blank=False
+	)
+	init_user = models.ForeignKey(
+		User,
+		on_delete=models.SET_NULL,
+		null=True,
+		blank=True,
+		verbose_name=_("User requested server creation")
+	)
+	status = models.PositiveSmallIntegerField(
+		choices=SERVER_STATUS,
+		verbose_name=_("Server current status"),
+		help_text=_("0 - Waiting for players\n1 - Game in process\n2 - Game finished\n3 - Ready for close"),
+		null=False,
+		blank=False
+	)
+	date_created = models.DateTimeField(
+		db_column='date_created',
+		null=False,
+		blank=False,
+		default=timezone.now,
+		verbose_name=_("Date Created"),
+		help_text=_("Date when the object was added to database")
+	)
+	token = models.CharField(_("Token"), max_length=40, primary_key=True)
+	game_type = models.PositiveSmallIntegerField(
+		choices=MATCH_TYPE,
+		verbose_name=_("Game type"),
+		help_text=_("0 - Casual\n"),
+		null=False,
+		blank=False
+	)
+	server_type = models.PositiveSmallIntegerField(
+		choices=SERVER_TYPE,
+		verbose_name=_("Server Security Type"),
+		help_text=_("0 - Public\n1 - Private\n2"),
+		null=False,
+		blank=False
+	)
+
+	class Meta:
+		verbose_name = _("Game Server")
+		verbose_name_plural = _("Game Servers")
+		db_table = "game_servers"
+		ordering = ("date_created", )
+
+	def save(self, *args, **kwargs):
+		if not self.token:
+			self.token = self.generate_key()
+		return super().save(*args, **kwargs)
+
+	def generate_key(self):
+		return binascii.hexlify(os.urandom(20)).decode()
+
+	def __str__(self):
+		return self.host_address + ":" + str(self.port)
