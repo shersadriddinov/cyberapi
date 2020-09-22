@@ -1,4 +1,8 @@
 from collections import namedtuple
+
+from django.db.models import Q
+from rest_framework.pagination import LimitOffsetPagination
+
 from v1.models import *
 from socket_handler.models import *
 from socket_handler.serializers import *
@@ -163,3 +167,68 @@ def remove_friend(request, pk):
 		response['detail'] = "User does not present in friends list"
 		response_status = status.HTTP_409_CONFLICT
 	return Response(data=response, status=response_status)
+
+
+class ServerListView(generics.ListCreateAPIView):
+	"""
+	Get list of game servers or create one
+
+	use **GET** for list of servers
+	use **POST** for creating server, send json containing user, host, port, status, game type, server type
+	:param order - order of returned list, you can use `date_created`
+	:param server_type - 0 - public, 1 - private
+	:param game_type - 0 - casual
+	:param status - 0 - Waiting for players, 1 - Game in process, 2 - Game finished, 3 - Ready for close
+	:return json containing server information
+	"""
+	pagination_class = LimitOffsetPagination
+
+	def post(self, request, *args, **kwargs):
+		pass
+
+	def get_queryset(self):
+		order = self.request.query_params("order", "-date_created")
+		server_type = int(self.request.query_params("server_type", 0))
+		game_type = self.request.query_params("game_type", False)  # type str
+		status = self.request.query_params("status", False)  # type str
+
+		server_filter = Q(server_type=server_type)
+		server_filter.add(Q(game_type=int(game_type)), Q.AND) if game_type else False
+		server_filter.add(Q(status=int(status)), Q.AND) if status else False
+
+		return Server.objects.filter(server_filter).order_by(order)
+
+	def list(self, request, *args, **kwargs):
+		ServerTuple = namedtuple('ServerTuple', ('servers',))
+		response = ServerUnrealSerializer(ServerTuple(servers=self.get_queryset()))
+		return Response(response.data)
+
+
+class ServerView(generics.RetrieveUpdateAPIView):
+	"""
+	Get, update, game server, depending on request's method used. Server is identified by server's
+	id passed.
+	use **GET** - to get info about server
+	use **PUT** - to update server field
+
+	:param order - order of returned list, you can use `date_created`
+	:return json containing user weapon config information
+	"""
+	serializer_class = ServerSerializer
+	queryset = Server.objects.all()
+	lookup_field = "pk"
+
+	def update(self, request, *args, **kwargs):
+		server = self.get_object()
+		game_type = self.request.query_params("game_type", False)  # type str
+		server_type = int(self.request.query_params("server_type", 0))
+
+		server.game_type = int(game_type) if game_type else False
+		server.server_type = server_type if server_type else False
+		result = server.save()
+		if result:
+			response = ServerSerializer(server, context={"request": request})
+			return Response(response.data, status=status.HTTP_202_ACCEPTED)
+		else:
+			response = {"detail": "Can't save server update"}
+		return Response(response, status=status.HTTP_400_BAD_REQUEST)

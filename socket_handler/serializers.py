@@ -19,3 +19,17 @@ class NotificationSerializer(serializers.ModelSerializer):
 
 class NotificationUnrealSerializer(serializers.Serializer):
 	notifications = NotificationSerializer(many=True)
+
+
+class ServerSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = Server
+		fields = (
+			"host_address", "port", "init_user",
+			"token", "game_type", "status",
+			"server_type", "date_created"
+		)
+
+
+class ServerUnrealSerializer(serializers.ModelSerializer):
+	servers = ServerSerializer(many=True)

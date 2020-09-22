@@ -11,4 +11,7 @@ urlpatterns = [
 	path('friend/request/', views.FriendNotificationView.as_view()),
 	path('friend/add/<int:pk>/', views.confirm_friendship),
 	path('friend/remove/<int:pk>/', views.remove_friend),
+
+	# Server
+
 ]
