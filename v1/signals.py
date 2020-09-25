@@ -32,11 +32,11 @@ def create_weapon_with_addons(sender, instance, created, **kwargs):
 
 
 @receiver(post_save, sender=Weapon)
-def add_default_weapon_for_all(sender, instance, **kwargs):
+def add_default_weapon_for_all(sender, instance, created, **kwargs):
 	"""
 	Auto add weapon to all users if weapon is marked as a default
 	"""
-	if instance.default and not instance.hidden and getattr(instance, 'from_admin_site', False):
+	if instance.default and not instance.hidden and getattr(instance, 'from_admin_site', False) and not created:
 		weapon_with_addons = WeaponAddons.objects.get(weapon=instance)
 		users = Profile.objects.all()
 		for user in users:

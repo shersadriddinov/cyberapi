@@ -78,6 +78,13 @@ class Weapon(PlayItem):
 	All weapons available in game, inherits from :model:`PlayItem`
 	"""
 	slot = models.PositiveSmallIntegerField(verbose_name=_("Slot"), choices=SLOTS, default=0, blank=False)
+	start = models.BooleanField(
+		db_column='start',
+		default=False,
+		blank=True,
+		verbose_name=_("Start weapon"),
+		help_text=_("This weapon can be used from start")
+	)
 
 	class Meta:
 		db_table = "weapon"
