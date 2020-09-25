@@ -75,7 +75,7 @@ class PlayItemAdmin(admin.ModelAdmin):
 class WeaponAdmin(PlayItemAdmin):
 	fieldsets = (
 		(None, {
-			'fields': ('tech_name', 'date_created', 'slot', ('default', 'hidden'))
+			'fields': ('tech_name', 'date_created', 'slot', ('default', 'hidden', 'start'))
 		}),
 	)
 

@@ -391,12 +391,12 @@ class WeaponView(generics.RetrieveUpdateDestroyAPIView):
 		else:
 			serializer = WeaponAddon(
 				weapon=weapon,
-				stock=weapon_with_addons.stock.filter(default=True, hidden=False),
-				barrel=weapon_with_addons.barrel.filter(default=True, hidden=False),
-				muzzle=weapon_with_addons.muzzle.filter(default=True, hidden=False),
-				mag=weapon_with_addons.mag.filter(default=True, hidden=False),
-				scope=weapon_with_addons.scope.filter(default=True, hidden=False),
-				grip=weapon_with_addons.grip.filter(default=True, hidden=False),
+				stock=weapon_with_addons.stock.filter(hidden=False),
+				barrel=weapon_with_addons.barrel.filter(hidden=False),
+				muzzle=weapon_with_addons.muzzle.filter(hidden=False),
+				mag=weapon_with_addons.mag.filter(hidden=False),
+				scope=weapon_with_addons.scope.filter(hidden=False),
+				grip=weapon_with_addons.grip.filter(hidden=False),
 			)
 			response = WeaponAddonSerializer(serializer, context={"request": request})
 		return Response(response.data, status=status.HTTP_200_OK)
