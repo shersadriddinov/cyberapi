@@ -184,13 +184,24 @@ class ServerListView(generics.ListCreateAPIView):
 	pagination_class = LimitOffsetPagination
 
 	def post(self, request, *args, **kwargs):
-		pass
+		user = request.user
+		server_type = int(request.data.get("server_type", 0))
+		game_type = int(request.data.get("game_type", 0))
+		server = Server.objects.create(
+			host_address=None,  # add function to open new server
+			init_user=user,
+			status=0,
+			game_type=game_type,
+			server_type=server_type
+		)
+		response = ServerSerializer(server, context={"request": request})
+		return Response(response.data)
 
 	def get_queryset(self):
-		order = self.request.query_params("order", "-date_created")
-		server_type = int(self.request.query_params("server_type", 0))
-		game_type = self.request.query_params("game_type", False)  # type str
-		status = self.request.query_params("status", False)  # type str
+		order = self.request.query_params.get("order", "-date_created")
+		server_type = int(self.request.query_params.get("server_type", 0))
+		game_type = self.request.query_params.get("game_type", False)  # type str
+		status = self.request.query_params.get("status", False)  # type str
 
 		server_filter = Q(server_type=server_type)
 		server_filter.add(Q(game_type=int(game_type)), Q.AND) if game_type else False
@@ -211,8 +222,8 @@ class ServerView(generics.RetrieveUpdateAPIView):
 	use **GET** - to get info about server
 	use **PUT** - to update server field
 
-	:param order - order of returned list, you can use `date_created`
-	:return json containing user weapon config information
+
+	:return json containing server information
 	"""
 	serializer_class = ServerSerializer
 	queryset = Server.objects.all()
@@ -220,8 +231,8 @@ class ServerView(generics.RetrieveUpdateAPIView):
 
 	def update(self, request, *args, **kwargs):
 		server = self.get_object()
-		game_type = self.request.query_params("game_type", False)  # type str
-		server_type = int(self.request.query_params("server_type", 0))
+		game_type = request.query_params.get("game_type", False)  # type str
+		server_type = int(request.query_params.get("server_type", 0))
 
 		server.game_type = int(game_type) if game_type else False
 		server.server_type = server_type if server_type else False
@@ -232,3 +243,61 @@ class ServerView(generics.RetrieveUpdateAPIView):
 		else:
 			response = {"detail": "Can't save server update"}
 		return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+
+class InviteListView(generics.ListCreateAPIView):
+	"""
+	Get list of user invitations
+
+	use **GET** for list of invitations
+	use **POST** for creating new invite for user
+	:param order - order of returned list, you can use `date_created`
+	:return json containing invite information
+	"""
+	queryset = Invite.objects.filter(expires__gt=timezone.now())
+	pagination_class = LimitOffsetPagination
+
+	def post(self, request, *args, **kwargs):
+		host_user = request.user
+		invited_user = request.data.get("invited", False)
+		server = request.data.get("server", False)
+
+		if invited_user and server:
+			try:
+				invited_user = User.objects.get(pk=invited_user)
+				server = Server.objects.get(pk=server)
+			except User.DoesNotExist:
+				return Response({"detail": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+			except Server.DoesNotExist:
+				return Response({"detail": "Server not found"}, status=status.HTTP_404_NOT_FOUND)
+			else:
+				invite = Invite.objects.create(
+					host_user=host_user,
+					invited_user=int(invited_user),
+					server=int(server)
+				)
+				send_to_socket({"action": "invite", "uuid": invite.invited_user, "inviter": invite.invited_user})
+				response = InviteSerializer(invite, context={"request": request})
+				return Response(response.data)
+		else:
+			return Response({"detail": "Server or invited user not specified"}, status=status.HTTP_404_NOT_FOUND)
+
+	def list(self, request, *args, **kwargs):
+		InviteTuple = namedtuple('InviteTuple', ('invites',))
+		response = ServerUnrealSerializer(InviteTuple(invites=self.get_queryset()))
+		return Response(response.data)
+
+
+class InviteView(generics.RetrieveDestroyAPIView):
+	"""
+	Get, delete user invitation, depending on request's method used. Invitation is identified by invite's
+	id passed.
+	use **GET** - to get info about server
+	use **DELETE** - to delete invite
+
+	:return json containing user invitation info
+	"""
+	serializer_class = InviteSerializer
+	queryset = Invite.objects.filter(expires__gt=timezone.now())
+	lookup_field = "pk"
+
