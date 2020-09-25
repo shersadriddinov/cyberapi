@@ -1,5 +1,6 @@
 import binascii
 import os
+from datetime import timedelta
 
 from django.db import models
 from django.utils import timezone
@@ -17,6 +18,9 @@ NOTIF_TYPES = (
 
 
 class Notification(models.Model):
+	"""
+	Model to represent user notifications
+	"""
 	user = models.ForeignKey(User, verbose_name=_("User"), on_delete=models.CASCADE)
 	date_created = models.DateTimeField(
 		db_column='date_created',
@@ -81,8 +85,11 @@ def validate_port(value):
 
 
 class Server(models.Model):
+	"""
+	Model to keep track of game servers
+	"""
 	host_address = models.GenericIPAddressField(
-		null=False,
+		null=True,
 		blank=False,
 		help_text=_("IP address accepts both IPv4, IPv6"),
 		verbose_name=_("Host address")
@@ -148,3 +155,41 @@ class Server(models.Model):
 
 	def __str__(self):
 		return self.host_address + ":" + str(self.port)
+
+
+class Invite(models.Model):
+	"""
+	Model to represent game invites send by users
+	"""
+	host_user = models.ForeignKey(User, related_name="host_user", on_delete=models.CASCADE, verbose_name=_("Inviter"), null=False, blank=False)
+	invited_user = models.ForeignKey(User, related_name="invited_user", on_delete=models.CASCADE, verbose_name=_("Invited"), null=False, blank=False)
+	server = models.ForeignKey(Server, on_delete=models.CASCADE, verbose_name=_("Server"), null=False, blank=False)
+	expires = models.DateTimeField(
+		db_column='expires',
+		null=False,
+		blank=True,
+		verbose_name=_("Expiry Date"),
+		help_text=_("If not specified, invitation expires after 3 days")
+	)
+	date_created = models.DateTimeField(
+		db_column='date_created',
+		null=False,
+		blank=False,
+		default=timezone.now,
+		verbose_name=_("Date Created"),
+		help_text=_("Date when the object was added to database")
+	)
+
+	class Meta:
+		verbose_name = _("Invitation")
+		verbose_name_plural = _("Invitations")
+		db_table = "invitations"
+		ordering = ("date_created", )
+
+	def save(self, *args, **kwargs):
+		if not self.expires:
+			self.expires = timezone.now() + timedelta(hours=24 * 3)
+		return super().save(*args, **kwargs)
+
+	def __str__(self):
+		return str(self.host_user) + "-" + str(self.invited_user) + "-" + str(self.id)

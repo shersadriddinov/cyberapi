@@ -13,5 +13,10 @@ urlpatterns = [
 	path('friend/remove/<int:pk>/', views.remove_friend),
 
 	# Server
+	path('server/list/', views.ServerListView.as_view()),
+	path('server/<int:pk>/', views.ServerView.as_view()),
 
+	# Invites
+	path('invite/list/', views.InviteListView.as_view()),
+	path('invite/<int:pk>/', views.InviteView.as_view())
 ]

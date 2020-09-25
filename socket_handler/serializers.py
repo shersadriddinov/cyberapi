@@ -33,3 +33,15 @@ class ServerSerializer(serializers.ModelSerializer):
 
 class ServerUnrealSerializer(serializers.ModelSerializer):
 	servers = ServerSerializer(many=True)
+
+
+class InviteSerializer(serializers.ModelSerializer):
+	server = ServerSerializer()
+
+	class Meta:
+		model = Invite
+		depth = "__all__"
+
+
+class InviteUnrealSerializer(serializers.ModelSerializer):
+	invites = InviteSerializer(many=True)

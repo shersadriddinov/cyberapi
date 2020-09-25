@@ -34,5 +34,27 @@ class ServerAdmin(admin.ModelAdmin):
 	)
 
 
+class InviteAdmin(admin.ModelAdmin):
+	list_display = ("id", "host_user", "invited_user", "server", "date_created", "expires")
+	list_display_links = ("id", )
+	list_editable = ("host_user", "invited_user", "expires", "server")
+	list_filter = ("date_created",)
+	list_select_related = True
+	ordering = ("-date_created", )
+	date_hierarchy = "date_created"
+	search_fields = ("host_user", "invited_user", "server")
+	fieldsets = (
+		(None, {
+			"fields": (("host_user", "invited_user", "server"), )
+		}),
+		("Invite Properties", {
+			"fields": (
+				("date_created", "expires"),
+			)
+		})
+	)
+
+
 admin.site.register(Notification, NotificationAdmin)
 admin.site.register(Server, ServerAdmin)
+admin.site.register(Invite, InviteAdmin)
