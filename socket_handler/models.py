@@ -123,7 +123,7 @@ class Server(models.Model):
 		verbose_name=_("Date Created"),
 		help_text=_("Date when the object was added to database")
 	)
-	token = models.CharField(_("Token"), max_length=40, primary_key=True)
+	token = models.CharField(_("Token"), max_length=40)
 	game_type = models.PositiveSmallIntegerField(
 		choices=MATCH_TYPE,
 		verbose_name=_("Game type"),
@@ -154,7 +154,7 @@ class Server(models.Model):
 		return binascii.hexlify(os.urandom(20)).decode()
 
 	def __str__(self):
-		return self.host_address + ":" + str(self.port)
+		return str(self.host_address) + ":" + str(self.port)
 
 
 class Invite(models.Model):
