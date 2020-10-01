@@ -93,3 +93,18 @@
 + `UPDATE` View WeaponListView: filter by slot added
 + `UPDATE` View UserConfigView: filter by slot added
 
+## Release 0.0.12
+1-10-2020
++ `NEW` Model Server: new model to keep track of game servers
++ `NEW` Model Invite: new model to keep track of invitations
++ `NEW` Admin Server: admin for server to manage game servers
++ `NEW` Admin Invite: admin for invites to manage players invitations
++ `NEW` View ServerList: to create or get the list of all game servers
++ `NEW` View ServerView: to get information about single server or update its params
++ `NEW` View InviteList: to create or get the list of user invitations or create new invitation
++ `NEW` View InviteView: to get or delete certain invite
++ `NEW` View set_default_weapon: to set one of the start weapons
++ `UPDATE` View Auth: send all available starting weapons
++ `UPDATE` Admin Weapon: start boolean field added to make weapon starting
++ `UPDATE` Model Weapon: start boolean field added to make weapon starting
+

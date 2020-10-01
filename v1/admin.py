@@ -73,6 +73,8 @@ class PlayItemAdmin(admin.ModelAdmin):
 
 
 class WeaponAdmin(PlayItemAdmin):
+	list_display = ('id', 'tech_name', 'date_created', "start", 'default', 'hidden')
+	list_editable = ('default', 'hidden', "start")
 	fieldsets = (
 		(None, {
 			'fields': ('tech_name', 'date_created', 'slot', ('default', 'hidden', 'start'))

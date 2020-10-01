@@ -76,19 +76,6 @@ class CharacterSerializer(serializers.ModelSerializer):
 		fields = ("id", "tech_name", "default")
 
 
-class NewUserSerializer(serializers.Serializer):
-	"""
-
-	"""
-	user = GeneralUserSerializer()
-	token = TokenSerializer()
-	default_characters = CharacterSerializer(many=True)
-
-
-class CharacterUnrealSerializer(serializers.Serializer):
-	characters = CharacterSerializer(many=True)
-
-
 class WeaponSerializer(serializers.ModelSerializer):
 	"""
 
@@ -97,6 +84,20 @@ class WeaponSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Weapon
 		fields = ("id", "tech_name", "default", "slot")
+
+
+class NewUserSerializer(serializers.Serializer):
+	"""
+
+	"""
+	user = GeneralUserSerializer()
+	token = TokenSerializer()
+	default_characters = CharacterSerializer(many=True)
+	start_weapons = WeaponSerializer(many=True)
+
+
+class CharacterUnrealSerializer(serializers.Serializer):
+	characters = CharacterSerializer(many=True)
 
 
 class WeaponUnrealSeializer(serializers.Serializer):

@@ -17,7 +17,7 @@ from socket_handler.models import *
 from socket_handler.serializers import *
 
 
-NewUser = namedtuple('NewUser', ('user', 'token', 'default_characters'))
+NewUser = namedtuple('NewUser', ('user', 'token', 'default_characters', "start_weapons"))
 WeaponAddon = namedtuple('WeaponAddon', ('weapon', 'stock', 'barrel', 'muzzle', 'mag', 'scope', 'grip'))
 
 
@@ -123,7 +123,12 @@ class Auth(generics.CreateAPIView):
 			group = Group.objects.get(name="Players")
 			group.user_set.add(user)
 			token = Token.objects.get(user=user)
-			new_user = NewUser(user=user, token=token, default_characters=Character.objects.filter(default=True))
+			new_user = NewUser(
+				user=user,
+				token=token,
+				default_characters=Character.objects.filter(default=True, hidden=False),
+				start_weapons=Weapon.objects.filter(start=True, hidden=False)
+			)
 			response = NewUserSerializer(new_user, context={'request': request})
 			return Response(response.data, status=status.HTTP_201_CREATED)
 		else:
@@ -153,6 +158,34 @@ def set_default_character(request, pk):
 			main=True
 		)
 		return Response(data={"detail": "Successfully added character to user and settled as its default"}, status=status.HTTP_200_OK)
+
+
+@api_view(['PUT', ])
+@permission_classes([IsAuthenticated])
+def set_default_weapon(request, pk):
+	"""
+	Function to set start weapon that user has chosen
+
+	:param pk - id of the weapon
+	:return 200 OK
+	"""
+	try:
+		weapon = Weapon.objects.get(pk=pk)
+	except Weapon.DoesNotExist:
+		return Response(data={"detail": "Weapon doesn't exists"}, status=status.HTTP_404_NOT_FOUND)
+	else:
+		if weapon.start:
+			weapon_addon = WeaponAddons.objects.get(weapon=weapon)
+			UserWeapon.objects.create(
+				profile=request.user.profile,
+				weapon_with_addons=weapon_addon,
+			)
+			response = {"detail": "Successfully added weapon to user"}
+			response_status = status.HTTP_200_OK
+		else:
+			response = {"detail": "Weapon is not start weapon"}
+			response_status = status.HTTP_400_BAD_REQUEST
+		return Response(data=response, status=response_status)
 
 
 class UserProfile(generics.RetrieveUpdateDestroyAPIView):

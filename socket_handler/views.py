@@ -236,13 +236,9 @@ class ServerView(generics.RetrieveUpdateAPIView):
 
 		server.game_type = int(game_type) if game_type else False
 		server.server_type = server_type if server_type else False
-		result = server.save()
-		if result:
-			response = ServerSerializer(server, context={"request": request})
-			return Response(response.data, status=status.HTTP_202_ACCEPTED)
-		else:
-			response = {"detail": "Can't save server update"}
-		return Response(response, status=status.HTTP_400_BAD_REQUEST)
+		server.save()
+		response = ServerSerializer(server, context={"request": request})
+		return Response(response.data, status=status.HTTP_202_ACCEPTED)
 
 
 class InviteListView(generics.ListCreateAPIView):
@@ -254,8 +250,10 @@ class InviteListView(generics.ListCreateAPIView):
 	:param order - order of returned list, you can use `date_created`
 	:return json containing invite information
 	"""
-	queryset = Invite.objects.filter(expires__gt=timezone.now())
 	pagination_class = LimitOffsetPagination
+
+	def get_queryset(self):
+		return Invite.objects.filter(expires__gt=timezone.now(), invited_user=self.request.user)
 
 	def post(self, request, *args, **kwargs):
 		host_user = request.user
@@ -273,10 +271,10 @@ class InviteListView(generics.ListCreateAPIView):
 			else:
 				invite = Invite.objects.create(
 					host_user=host_user,
-					invited_user=int(invited_user),
-					server=int(server)
+					invited_user=invited_user,
+					server=server
 				)
-				send_to_socket({"action": "invite", "uuid": invite.invited_user, "inviter": invite.invited_user})
+				send_to_socket({"action": "invite", "uuid": invite.invited_user.id, "inviter": invite.host_user.id})
 				response = InviteSerializer(invite, context={"request": request})
 				return Response(response.data)
 		else:
@@ -284,7 +282,7 @@ class InviteListView(generics.ListCreateAPIView):
 
 	def list(self, request, *args, **kwargs):
 		InviteTuple = namedtuple('InviteTuple', ('invites',))
-		response = ServerUnrealSerializer(InviteTuple(invites=self.get_queryset()))
+		response = InviteUnrealSerializer(InviteTuple(invites=self.get_queryset()))
 		return Response(response.data)
 
 
@@ -300,4 +298,17 @@ class InviteView(generics.RetrieveDestroyAPIView):
 	serializer_class = InviteSerializer
 	queryset = Invite.objects.filter(expires__gt=timezone.now())
 	lookup_field = "pk"
+
+	def get(self, request, *args, **kwargs):
+		if self.request.user == self.get_object().invited_user:
+			response = InviteSerializer(self.get_object(), context={"request": request})
+			return Response(response.data, status=status.HTTP_200_OK)
+		else:
+			return Response(data={"detail": "Sorry, this invite is not for you"}, status=status.HTTP_401_UNAUTHORIZED)
+
+	def delete(self, request, *args, **kwargs):
+		if self.request.user == self.get_object().invited_user:
+			return super().delete(self, request, *args, **kwargs)
+		else:
+			return Response(data={"detail": "Sorry, this invite is not for you"}, status=status.HTTP_401_UNAUTHORIZED)
 

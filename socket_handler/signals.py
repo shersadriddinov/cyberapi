@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 @receiver(post_save, sender=Server)
-def create_user_profile(sender, instance, created, **kwargs):
+def create_new_server(sender, instance, created, **kwargs):
 	"""
 	Auto notify all players with new server created
 	"""
