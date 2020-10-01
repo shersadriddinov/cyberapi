@@ -25,7 +25,7 @@ class ServerSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Server
 		fields = (
-			"host_address", "port", "init_user",
+			"id", "host_address", "port", "init_user",
 			"token", "game_type", "status",
 			"server_type", "date_created"
 		)
@@ -40,7 +40,7 @@ class InviteSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Invite
-		depth = "__all__"
+		fields = "__all__"
 
 
 class InviteUnrealSerializer(serializers.Serializer):
