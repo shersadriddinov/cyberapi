@@ -13,4 +13,5 @@ def create_new_server(sender, instance, created, **kwargs):
 	Auto notify all players with new server created
 	"""
 	if created:
-		send_to_socket(data={"action": "new_server"})
+		if not instance.server_type == 1:
+			send_to_socket(data={"action": "new_server"})
