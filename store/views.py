@@ -51,7 +51,7 @@ class UserLotListView(generics.ListAPIView):
 	def get_queryset(self):
 		premium = self.request.query_params.get("premium", None)
 		order = self.request.query_params.get("order", "-date_created")
-		query = UserLots.objects.filter(status=True)
+		query = UserLots.objects.filter(status=True, user=self.request.user.profile)
 		if premium is not None:
 			query = query.filter(premium=bool(premium))
 		return query.order_by(order)
@@ -115,15 +115,41 @@ class SearchLotView(generics.ListAPIView):
 
 class LotView(generics.RetrieveAPIView):
 	"""
-
+	Returns information about single lot specified in pk
 	"""
-	pass
+	serializer_class = LotSerializer
+	queryset = Lot.objects.filter(status=True)
+	lookup_field = 'pk'
 
 
 @api_view(['POST', ])
 @permission_classes([IsAuthenticated])
 def purchase(request, pk):
 	"""
+	Function to purchase lots, accepts only POST requests, takes lot id as pk and adds it to user, which was authenticated
 
+	:param pk - lot id
+	:return 200 OK
 	"""
-	pass
+	lot = Lot.objects.get(pk=pk)
+	user = request.user
+	response = {
+		'data': {"detail": "Lot has been successfully purchased"},
+		'status': status.HTTP_200_OK
+	}
+	if lot.status:
+		if lot.premium and user.profile.donate >= lot.price:
+			user.profile.donate -= lot.price
+			UserLots.objects.create(user=user.profile, lot=lot)
+			user.profile.save()
+		elif not lot.premium and user.profile.balance >= lot.price:
+			user.profile.balance -= lot.price
+			UserLots.objects.create(user=user.profile, lot=lot)
+			user.profile.save()
+		else:
+			response['data']['detail'] = "Insufficient funds"
+			response['status'] = status.HTTP_400_BAD_REQUEST
+	else:
+		response['data']['detail'] = 'Lot is unavailable to purchase'
+		response['status'] = status.HTTP_400_BAD_REQUEST
+	return Response(data=response['data'], status=response['status'])
