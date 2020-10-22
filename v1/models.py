@@ -251,6 +251,13 @@ class Profile(models.Model):
 		related_name="profile_weapon",
 		through="UserWeapon"
 	)
+	lots = models.ManyToManyField(
+		'store.Lot',
+		blank=True,
+		verbose_name=_("User purchased lots"),
+		related_name="profile_lot",
+		through="store.UserLots"
+	)
 
 	class Meta:
 		db_table = 'profile'

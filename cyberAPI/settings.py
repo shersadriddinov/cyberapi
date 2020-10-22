@@ -39,6 +39,7 @@ INSTALLED_APPS = [
 	# Custom APPS
 	'v1.apps.V1Config',
 	'socket_handler.apps.SocketHandlerConfig',
+	'store.apps.StoreConfig',
 
 	# Installed APPS
 	'rest_framework',

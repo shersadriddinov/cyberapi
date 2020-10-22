@@ -6,6 +6,7 @@ from django.urls import include, path
 urlpatterns = [
 	path('api/', include('v1.urls')),
 	path('socket/', include('socket_handler.urls')),
+	path('store/', include('store.urls')),
 	path('api-token-auth/', obtain_auth_token),
 	path('admin/doc/', include('django.contrib.admindocs.urls')),
 	path('admin/', admin.site.urls)

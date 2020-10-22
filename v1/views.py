@@ -310,6 +310,10 @@ class CharacterListView(generics.ListAPIView):
 
 	def list(self, request, *args, **kwargs):
 		CharacterTuple = namedtuple('CharacterTuple', ('characters',))
+		page = self.paginate_queryset(self.get_queryset())
+		if page is not None:
+			response = CharacterUnrealSerializer(CharacterTuple(characters=page))
+			return self.get_paginated_response(response.data)
 		response = CharacterUnrealSerializer(CharacterTuple(characters=self.get_queryset()))
 		return Response(response.data)
 
@@ -397,6 +401,10 @@ class WeaponListView(generics.ListAPIView):
 
 	def list(self, request, *args, **kwargs):
 		WeaponTuple = namedtuple('WeaponTuple', ('weapons',))
+		page = self.paginate_queryset(self.get_queryset())
+		if page is not None:
+			response = WeaponUnrealSeializer(WeaponTuple(weapons=page))
+			return self.get_paginated_response(response.data)
 		response = WeaponUnrealSeializer(WeaponTuple(weapons=self.get_queryset()))
 		return Response(response.data)
 
@@ -531,6 +539,10 @@ class UsersList(generics.ListAPIView):
 
 	def list(self, request, *args, **kwargs):
 		UserTuple = namedtuple('UserTuple', ('users',))
+		page = self.paginate_queryset(self.get_queryset())
+		if page is not None:
+			response = UserUnrealSerializer(UserTuple(users=page))
+			return self.get_paginated_response(response.data)
 		response = UserUnrealSerializer(UserTuple(users=self.get_queryset()))
 		return Response(response.data)
 
@@ -562,6 +574,10 @@ class UserSearchView(generics.ListAPIView):
 
 	def list(self, request, *args, **kwargs):
 		UserTuple = namedtuple('UserTuple', ('users',))
+		page = self.paginate_queryset(self.get_queryset())
+		if page is not None:
+			response = UserUnrealSerializer(UserTuple(users=page))
+			return self.get_paginated_response(response.data)
 		response = UserUnrealSerializer(UserTuple(users=self.get_queryset()))
 		return Response(response.data)
 
@@ -586,6 +602,10 @@ class UserConfigView(generics.ListCreateAPIView):
 
 	def list(self, request, *args, **kwargs):
 		ConfigTuple = namedtuple('ConfigTuple', ('configs',))
+		page = self.paginate_queryset(self.get_queryset())
+		if page is not None:
+			response = UserWeaponConfigUnrealSerializer(ConfigTuple(configs=page))
+			return self.get_paginated_response(response.data)
 		response = UserWeaponConfigUnrealSerializer(ConfigTuple(configs=self.get_queryset()))
 		return Response(response.data)
 
