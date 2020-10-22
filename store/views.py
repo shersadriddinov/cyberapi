@@ -2,6 +2,7 @@ from collections import namedtuple
 from django.contrib.auth.models import User
 from django.db.models import Q
 from django.utils import timezone
+from django.db import IntegrityError
 from rest_framework import generics
 from store.serializers import *
 from rest_framework import status
@@ -17,7 +18,7 @@ class LotListView(generics.ListAPIView):
 	"""
 	Returns list of all lots
 
-	:param premium - boolean, if True returns only premium items, False return ordinary. If not specified, returns all
+	:param premium - boolean, if 1 (True) returns only premium items, 0 (False_ return ordinary. If not specified, returns all
 	:param order - order of returned list, you can use `date_created`, `tech_name`, or any other param.
 	:return json containing requested lots
 	"""
@@ -29,7 +30,7 @@ class LotListView(generics.ListAPIView):
 		order = self.request.query_params.get("order", "-date_created")
 		query = Lot.objects.filter(status=True)
 		if premium is not None:
-			query = query.filter(premium=bool(premium))
+			query = query.filter(premium=bool(int(premium)))
 		return query.order_by(order)
 
 	def list(self, request, *args, **kwargs):
@@ -41,8 +42,7 @@ class LotListView(generics.ListAPIView):
 class UserLotListView(generics.ListAPIView):
 	"""
 	Return list of user purchased lots
-	:param premium - boolean, if True returns only premium items, False return ordinary. If not specified, returns all
-	:param order - order of returned list, you can use `date_created`, `tech_name`, or any other param.
+	:param premium - boolean, if 1 (True) returns only premium items, 0 (False_ return ordinary. If not specified, returns all
 	:return json containing purchased lots
 	"""
 	pagination_class = LimitOffsetPagination
@@ -50,11 +50,11 @@ class UserLotListView(generics.ListAPIView):
 
 	def get_queryset(self):
 		premium = self.request.query_params.get("premium", None)
-		order = self.request.query_params.get("order", "-date_created")
-		query = UserLots.objects.filter(status=True, user=self.request.user.profile)
+		query = UserLots.objects.filter(user=self.request.user.profile)
 		if premium is not None:
-			query = query.filter(premium=bool(premium))
-		return query.order_by(order)
+			query = query.filter(lot__premium=bool(int(premium)))
+		user_lots_ids = query.values_list('lot_id', flat=True)
+		return Lot.objects.filter(status=True, pk__in=user_lots_ids)
 
 	def list(self, request, *args, **kwargs):
 		UserLotTuple = namedtuple('UserLotTuple', ('lots',))
@@ -66,7 +66,7 @@ class SearchLotView(generics.ListAPIView):
 	"""
 	Returns a list of lots matched by given query
 	:param query - the string for searching in user names
-	:param premium - boolean, if True returns only premium items, False return ordinary. If not specified, returns all
+	:param premium - boolean, if 1 (True) returns only premium items, 0 (False_ return ordinary. If not specified, returns all
 	:param character - for character filter
 	:param weapon - for weapon filter
 	:param stock - for stock filter
@@ -96,15 +96,18 @@ class SearchLotView(generics.ListAPIView):
 		order = self.request.query_params.get("order", "-date_created")
 
 		search_filter = Q(status=True)
-		search_filter.add(Q(character__tech_name__contains=search_query), Q.AND) if character else False
-		search_filter.add(Q(weapon__tech_name__contains=search_query), Q.AND) if weapon else False
-		search_filter.add(Q(stock__tech_name__contains=search_query), Q.AND) if stock else False
-		search_filter.add(Q(barrel__tech_name__contains=search_query), Q.AND) if barrel else False
-		search_filter.add(Q(muzzle__tech_name__contains=search_query), Q.AND) if muzzle else False
-		search_filter.add(Q(mag__tech_name__contains=search_query), Q.AND) if mag else False
-		search_filter.add(Q(grip__tech_name__contains=search_query), Q.AND) if grip else False
-		search_filter.add(Q(scope__tech_name__contains=search_query), Q.AND) if scope else False
-		search_filter.add(Q(premium=bool(premium)), Q.AND) if premium is not None else False
+		search_filter.add(Q(character__tech_name__contains=search_query), Q.AND) if int(character) else False
+		search_filter.add(Q(weapon__tech_name__contains=search_query), Q.AND) if int(weapon) else False
+		search_filter.add(Q(stock__tech_name__contains=search_query), Q.AND) if int(stock) else False
+		search_filter.add(Q(barrel__tech_name__contains=search_query), Q.AND) if int(barrel) else False
+		search_filter.add(Q(muzzle__tech_name__contains=search_query), Q.AND) if int(muzzle) else False
+		search_filter.add(Q(mag__tech_name__contains=search_query), Q.AND) if int(mag) else False
+		search_filter.add(Q(grip__tech_name__contains=search_query), Q.AND) if int(grip) else False
+		search_filter.add(Q(scope__tech_name__contains=search_query), Q.AND) if int(scope) else False
+		search_filter.add(Q(premium=bool(int(premium))), Q.AND) if premium is not None else False
+		if not (int(character) or int(weapon) or int(stock) or int(barrel) or int(muzzle) or int(mag) or int(grip) or int(scope)):
+			search_filter.add(Q(tech_name__contains=search_query), Q.AND)
+		print(search_filter)
 		return Lot.objects.filter(search_filter).order_by(order)
 
 	def list(self, request, *args, **kwargs):
@@ -140,11 +143,21 @@ def purchase(request, pk):
 	if lot.status:
 		if lot.premium and user.profile.donate >= lot.price:
 			user.profile.donate -= lot.price
-			UserLots.objects.create(user=user.profile, lot=lot)
+			try:
+				UserLots.objects.create(user=user.profile, lot=lot)
+			except IntegrityError:
+				response['data']['detail'] = "User already purchased this lot"
+				response['status'] = status.HTTP_400_BAD_REQUEST
+				user.profile.donate += lot.price
 			user.profile.save()
 		elif not lot.premium and user.profile.balance >= lot.price:
 			user.profile.balance -= lot.price
-			UserLots.objects.create(user=user.profile, lot=lot)
+			try:
+				UserLots.objects.create(user=user.profile, lot=lot)
+			except IntegrityError:
+				response['data']['detail'] = "User already purchased this lot"
+				response['status'] = status.HTTP_400_BAD_REQUEST
+				user.profile.balance += lot.price
 			user.profile.save()
 		else:
 			response['data']['detail'] = "Insufficient funds"

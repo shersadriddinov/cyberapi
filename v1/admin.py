@@ -8,7 +8,6 @@ from .models import *
 
 class ProfileInline(admin.TabularInline):
 	model = Profile
-	readonly_fields = ('balance', 'donate')
 
 
 class UserAdmin(UserAdmin):
@@ -38,7 +37,7 @@ class ProfileAdmin(admin.ModelAdmin):
 	list_display_links = ("user", )
 	list_select_related = True
 	ordering = ('-user__date_joined',)
-	readonly_fields = ("karma", "balance", "donate", "client_settings_json")
+	readonly_fields = ("client_settings_json", )
 	search_fields = ("user__username",)
 	empty_value_display = '-empty-'
 	fieldsets = (

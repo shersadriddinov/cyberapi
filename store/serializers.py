@@ -7,7 +7,8 @@ from rest_framework.authtoken.models import Token
 class LotSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Lot
-		fields = ("__all__", )
+		fields = "__all__"
+		depth = 1
 
 
 class LotUnrealSerializer(serializers.Serializer):
