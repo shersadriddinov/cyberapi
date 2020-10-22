@@ -108,3 +108,15 @@
 + `UPDATE` Admin Weapon: start boolean field added to make weapon starting
 + `UPDATE` Model Weapon: start boolean field added to make weapon starting
 
+
+## Release 0.0.13
+22-10-2020
++ `NEW` Model Lot: new model to represent store lots
++ `NEW` Model UserLot: new model to save user purchased lots
++ `NEW` Admin LotAdmin: new admin to manage lots
++ `NEW` Admin UserLotAdmin: new admin to inspect user lots
++ `NEW` View LotList: request to list all lots
++ `NEW` View UserLotList: request to list all user lots
++ `NEW` View LotView: request to detail a lot
++ `NEW` View SearchLot: request to search for specific lot
++ `NEW` View purchase: adding lot to user routine

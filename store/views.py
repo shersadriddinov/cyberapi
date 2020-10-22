@@ -115,7 +115,6 @@ class SearchLotView(generics.ListAPIView):
 		search_filter.add(Q(premium=bool(int(premium))), Q.AND) if premium is not None else False
 		if not (int(character) or int(weapon) or int(stock) or int(barrel) or int(muzzle) or int(mag) or int(grip) or int(scope)):
 			search_filter.add(Q(tech_name__contains=search_query), Q.AND)
-		print(search_filter)
 		return Lot.objects.filter(search_filter).order_by(order)
 
 	def list(self, request, *args, **kwargs):
