@@ -35,6 +35,10 @@ class LotListView(generics.ListAPIView):
 
 	def list(self, request, *args, **kwargs):
 		LotTuple = namedtuple('LotTuple', ('lots',))
+		page = self.paginate_queryset(self.get_queryset())
+		if page is not None:
+			response = LotUnrealSerializer(LotTuple(lots=page))
+			return self.get_paginated_response(response.data)
 		response = LotUnrealSerializer(LotTuple(lots=self.get_queryset()))
 		return Response(response.data)
 
@@ -58,6 +62,10 @@ class UserLotListView(generics.ListAPIView):
 
 	def list(self, request, *args, **kwargs):
 		UserLotTuple = namedtuple('UserLotTuple', ('lots',))
+		page = self.paginate_queryset(self.get_queryset())
+		if page is not None:
+			response = LotUnrealSerializer(UserLotTuple(lots=page))
+			return self.get_paginated_response(response.data)
 		response = LotUnrealSerializer(UserLotTuple(lots=self.get_queryset()))
 		return Response(response.data)
 
@@ -112,6 +120,10 @@ class SearchLotView(generics.ListAPIView):
 
 	def list(self, request, *args, **kwargs):
 		LotTuple = namedtuple('LotTuple', ('lots',))
+		page = self.paginate_queryset(self.get_queryset())
+		if page is not None:
+			response = LotUnrealSerializer(LotTuple(lots=page))
+			return self.get_paginated_response(response.data)
 		response = LotUnrealSerializer(LotTuple(lots=self.get_queryset()))
 		return Response(response.data)
 

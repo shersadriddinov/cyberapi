@@ -31,6 +31,10 @@ class NotificationView(generics.ListAPIView):
 
 	def list(self, request, *args, **kwargs):
 		NotificationTuple = namedtuple('NotificationTuple', ('notifications',))
+		page = self.paginate_queryset(self.get_queryset())
+		if page is not None:
+			response = NotificationUnrealSerializer(NotificationTuple(notifications=page))
+			return self.get_paginated_response(response.data)
 		response = NotificationUnrealSerializer(NotificationTuple(notifications=self.get_queryset()))
 		return Response(response.data)
 
@@ -78,6 +82,10 @@ class FriendNotificationView(generics.ListCreateAPIView):
 
 	def list(self, request, *args, **kwargs):
 		FriendRequestTuple = namedtuple('FriendRequestTuple', ('notifications',))
+		page = self.paginate_queryset(self.get_queryset())
+		if page is not None:
+			response = NotificationUnrealSerializer(FriendRequestTuple(notifications=page))
+			return self.get_paginated_response(response.data)
 		response = NotificationUnrealSerializer(FriendRequestTuple(notifications=self.get_queryset()))
 		return Response(response.data)
 
@@ -211,6 +219,10 @@ class ServerListView(generics.ListCreateAPIView):
 
 	def list(self, request, *args, **kwargs):
 		ServerTuple = namedtuple('ServerTuple', ('servers',))
+		page = self.paginate_queryset(self.get_queryset())
+		if page is not None:
+			response = ServerUnrealSerializer(ServerTuple(servers=page))
+			return self.get_paginated_response(response.data)
 		response = ServerUnrealSerializer(ServerTuple(servers=self.get_queryset()))
 		return Response(response.data)
 
@@ -282,6 +294,10 @@ class InviteListView(generics.ListCreateAPIView):
 
 	def list(self, request, *args, **kwargs):
 		InviteTuple = namedtuple('InviteTuple', ('invites',))
+		page = self.paginate_queryset(self.get_queryset())
+		if page is not None:
+			response = InviteUnrealSerializer(InviteTuple(invites=page))
+			return self.get_paginated_response(response.data)
 		response = InviteUnrealSerializer(InviteTuple(invites=self.get_queryset()))
 		return Response(response.data)
 
