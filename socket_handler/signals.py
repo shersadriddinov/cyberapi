@@ -15,3 +15,9 @@ def create_new_server(sender, instance, created, **kwargs):
 	if created:
 		if not instance.server_type == 1:
 			send_to_socket(data={"action": "new_server"})
+
+
+@receiver(post_save, sender=Invite)
+def update_white_list(sender, instance, created, **kwargs):
+	if created:
+		send_to_socket(data={"action": "white_list_update", "server": instance.server, "added": instance.invited_user})

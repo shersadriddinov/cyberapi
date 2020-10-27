@@ -180,3 +180,4 @@ CACHES = {
 }
 
 CACHE_TTL = 60 * 10
+DEFAULT_SERVER_PROFILE = os.environ.get("DEFAULT_SERVER_PROFILE", "default_server")

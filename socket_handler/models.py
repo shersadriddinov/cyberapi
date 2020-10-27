@@ -60,10 +60,11 @@ class Notification(models.Model):
 
 
 SERVER_STATUS = (
-	(0, _("Waiting for players")),
-	(1, _("Game in process")),
-	(2, _("Game finished")),
-	(3, _("Ready for close"))
+	(0, _("Server not assigned")),
+	(1, _("Waiting for players")),
+	(2, _("Game in process")),
+	(3, _("Game finished")),
+	(4, _("Ready for close"))
 )
 
 SERVER_TYPE = (
@@ -111,8 +112,8 @@ class Server(models.Model):
 	status = models.PositiveSmallIntegerField(
 		choices=SERVER_STATUS,
 		verbose_name=_("Server current status"),
-		help_text=_("0 - Waiting for players\n1 - Game in process\n2 - Game finished\n3 - Ready for close"),
-		null=False,
+		help_text=_("0 - Server not assigned\n1 - Waiting for players\n2 - Game in process\n3 - Game finished\n4 - Ready for close"),
+		default=0,
 		blank=False
 	)
 	date_created = models.DateTimeField(
@@ -123,7 +124,7 @@ class Server(models.Model):
 		verbose_name=_("Date Created"),
 		help_text=_("Date when the object was added to database")
 	)
-	token = models.CharField(_("Token"), max_length=40)
+	token = models.CharField(_("Token"), max_length=40, db_index=True)
 	game_type = models.PositiveSmallIntegerField(
 		choices=MATCH_TYPE,
 		verbose_name=_("Game type"),
@@ -138,6 +139,7 @@ class Server(models.Model):
 		null=False,
 		blank=False
 	)
+	white_list = models.ManyToManyField(User, blank=True, verbose_name=_("White List"), related_name='server_white_list')
 
 	class Meta:
 		verbose_name = _("Game Server")
@@ -189,6 +191,8 @@ class Invite(models.Model):
 	def save(self, *args, **kwargs):
 		if not self.expires:
 			self.expires = timezone.now() + timedelta(hours=24 * 3)
+		self.server.white_list.add(self.invited_user)
+		self.server.save()
 		return super().save(*args, **kwargs)
 
 	def __str__(self):
