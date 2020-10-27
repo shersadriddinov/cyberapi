@@ -13,7 +13,7 @@ urlpatterns = [
 	path('friend/remove/<int:pk>/', views.remove_friend),
 
 	# Server
-	path('server/assign/', views.assign_server),
+	path('server/assign/<int:pk>/', views.assign_server),
 	path('server/update/', views.update_server_state),
 	path('server/list/', views.ServerListView.as_view()),
 	path('server/<int:pk>/', views.ServerView.as_view()),

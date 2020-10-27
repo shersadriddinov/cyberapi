@@ -20,16 +20,18 @@ class ServerAdmin(admin.ModelAdmin):
 	list_select_related = True
 	ordering = ("-date_created", )
 	date_hierarchy = "date_created"
-	readonly_fields = ("token", "date_created")
+	readonly_fields = ("token", "date_created",)
+	filter_horizontal = ("white_list", )
 	search_fields = ("id", "host_address", "init_user")
 	fieldsets = (
 		(None, {
 			"fields": (("host_address", "port"), "date_created", "init_user")
 		}),
 		("Server Properties", {
-			"fields": (
-				"status", "game_type", "server_type", "token"
-			)
+			"fields": ("status", "game_type", "server_type", "token")
+		}),
+		("White List", {
+			"fields": ("white_list", )
 		})
 	)
 

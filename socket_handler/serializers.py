@@ -37,7 +37,7 @@ class ServerUnrealSerializer(serializers.Serializer):
 class GameServerSeriazlizer(serializers.ModelSerializer):
 	class Meta:
 		model = Server
-		fields = ("__all__", )
+		fields = "__all__"
 
 
 class InviteSerializer(serializers.ModelSerializer):

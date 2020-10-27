@@ -36,6 +36,7 @@ class IsValidServer(BasePermission):
 			return False
 		else:
 			if user.is_staff and user.username == default.username and check_password(password, default.password):
+
 				return True
 			else:
 				return False

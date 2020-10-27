@@ -20,4 +20,4 @@ def create_new_server(sender, instance, created, **kwargs):
 @receiver(post_save, sender=Invite)
 def update_white_list(sender, instance, created, **kwargs):
 	if created:
-		send_to_socket(data={"action": "white_list_update", "server": instance.server, "added": instance.invited_user})
+		send_to_socket(data={"action": "white_list_update", "server": instance.server.host_address, "added": instance.invited_user.id})

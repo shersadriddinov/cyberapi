@@ -206,13 +206,16 @@ class ServerListView(generics.ListCreateAPIView):
 
 	def get_queryset(self):
 		order = self.request.query_params.get("order", "-date_created")
-		server_type = int(self.request.query_params.get("server_type", 0))
+		server_type = int(self.request.query_params.get("server_type", False))
 		game_type = self.request.query_params.get("game_type", False)  # type str
 		status = self.request.query_params.get("status", False)  # type str
 
-		server_filter = Q(server_type=server_type)
+		server_filter = Q()
+		server_filter.add(Q(server_type=int(server_type)), Q.AND) if server_type else False
 		server_filter.add(Q(game_type=int(game_type)), Q.AND) if game_type else False
 		server_filter.add(Q(status=int(status)), Q.AND) if status else False
+
+		print(server_filter)
 
 		return Server.objects.filter(server_filter).order_by(order)
 
@@ -262,9 +265,10 @@ def assign_server(request, pk):
 	else:
 		server.host_address = ip
 		server.port = port
+		server.status = 1
 		server.save()
 		response['data'] = GameServerSeriazlizer(server, context={"request": request})
-	return Response(data=response['data'], status=response['status'])
+	return Response(data=response['data'].data, status=response['status'])
 
 
 @api_view(["PUT"])
@@ -279,7 +283,7 @@ def update_server_state(request, ):
 		server = Server.objects.get(token=token)
 		server.status = status
 		server.save()
-	return Response(data={"detail": "Successfully changed state"}, status=status.HTTP_200_OK)
+	return Response(data={"detail": "Successfully changed state"})
 
 
 class InviteListView(generics.ListCreateAPIView):
