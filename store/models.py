@@ -87,3 +87,40 @@ class UserLots(models.Model):
 		verbose_name = _("User Lot")
 		verbose_name_plural = _("User Lots")
 		ordering = ("-date_purchased", )
+
+	def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+		for character in self.lot.character.all():
+			UserCharacter.objects.create(profile=self.user.profile, character=character)
+		for weapon in self.lot.weapons.all():
+			UserWeapon.objects.create(profile=self.user.profile, weapon_with_addons=WeaponAddons.objects.get(weapon=weapon))
+		for stock in self.lot.stock.all():
+			for user_weapon in UserWeapon.objects.filter(profile=self.user.profile):
+				if user_weapon.weapon_with_addons.filter(stock=stock).exists():
+					user_weapon.user_addon_stock.append(stock.id)
+					break
+		for barrel in self.lot.barrel.all():
+			for user_weapon in UserWeapon.objects.filter(profile=self.user.profile):
+				if user_weapon.weapon_with_addons.filter(barrel=barrel).exists():
+					user_weapon.user_addon_stock.append(barrel.id)
+					break
+		for muzzle in self.lot.muzzle.all():
+			for user_weapon in UserWeapon.objects.filter(profile=self.user.profile):
+				if user_weapon.weapon_with_addons.filter(muzzle=muzzle).exists():
+					user_weapon.user_addon_stock.append(muzzle.id)
+					break
+		for mag in self.lot.mag.all():
+			for user_weapon in UserWeapon.objects.filter(profile=self.user.profile):
+				if user_weapon.weapon_with_addons.filter(mag=mag).exists():
+					user_weapon.user_addon_stock.append(mag.id)
+					break
+		for grip in self.lot.grip.all():
+			for user_weapon in UserWeapon.objects.filter(profile=self.user.profile):
+				if user_weapon.weapon_with_addons.filter(grip=grip).exists():
+					user_weapon.user_addon_stock.append(grip.id)
+					break
+		for scope in self.lot.stock.all():
+			for user_weapon in UserWeapon.objects.filter(profile=self.user.profile):
+				if user_weapon.weapon_with_addons.filter(scope=scope).exists():
+					user_weapon.user_addon_stock.append(scope.id)
+					break
+		super(UserLots, self).save(force_insert, force_update, using, update_fields)

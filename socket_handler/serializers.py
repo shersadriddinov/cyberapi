@@ -25,14 +25,19 @@ class ServerSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Server
 		fields = (
-			"id", "host_address", "port", "init_user",
-			"token", "game_type", "status",
+			"id", "host_address", "port", "init_user", "game_type", "status",
 			"server_type", "date_created"
 		)
 
 
 class ServerUnrealSerializer(serializers.Serializer):
 	servers = ServerSerializer(many=True)
+
+
+class GameServerSeriazlizer(serializers.ModelSerializer):
+	class Meta:
+		model = Server
+		fields = "__all__"
 
 
 class InviteSerializer(serializers.ModelSerializer):

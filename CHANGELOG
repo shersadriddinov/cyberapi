@@ -120,3 +120,11 @@
 + `NEW` View LotView: request to detail a lot
 + `NEW` View SearchLot: request to search for specific lot
 + `NEW` View purchase: adding lot to user routine
+
+## Release 0.0.14
++ `NEW` View assign: assign ready game server to started match
++ `NEW` View update: change server stater
++ `UPDATE` Model Server: white list to represent users allowed on server
++ `UPDATE` Signal Invite: notify game server new invite created and new user added to white list
++ `UPDATE` Model Invite: save invited user to server's white list
++ `UPDATE` Model UserLots: add all purchased items to user

@@ -10,7 +10,7 @@ from socket_handler.permissions import *
 from socket_handler.utils import *
 from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 from rest_framework.decorators import api_view, permission_classes
 
 
@@ -196,9 +196,8 @@ class ServerListView(generics.ListCreateAPIView):
 		server_type = int(request.data.get("server_type", 0))
 		game_type = int(request.data.get("game_type", 0))
 		server = Server.objects.create(
-			host_address=None,  # add function to open new server
+			host_address=None,
 			init_user=user,
-			status=0,
 			game_type=game_type,
 			server_type=server_type
 		)
@@ -207,13 +206,16 @@ class ServerListView(generics.ListCreateAPIView):
 
 	def get_queryset(self):
 		order = self.request.query_params.get("order", "-date_created")
-		server_type = int(self.request.query_params.get("server_type", 0))
+		server_type = int(self.request.query_params.get("server_type", False))
 		game_type = self.request.query_params.get("game_type", False)  # type str
 		status = self.request.query_params.get("status", False)  # type str
 
-		server_filter = Q(server_type=server_type)
+		server_filter = Q()
+		server_filter.add(Q(server_type=int(server_type)), Q.AND) if server_type else False
 		server_filter.add(Q(game_type=int(game_type)), Q.AND) if game_type else False
 		server_filter.add(Q(status=int(status)), Q.AND) if status else False
+
+		print(server_filter)
 
 		return Server.objects.filter(server_filter).order_by(order)
 
@@ -227,7 +229,7 @@ class ServerListView(generics.ListCreateAPIView):
 		return Response(response.data)
 
 
-class ServerView(generics.RetrieveUpdateAPIView):
+class ServerView(generics.RetrieveAPIView):
 	"""
 	Get, update, game server, depending on request's method used. Server is identified by server's
 	id passed.
@@ -241,16 +243,47 @@ class ServerView(generics.RetrieveUpdateAPIView):
 	queryset = Server.objects.all()
 	lookup_field = "pk"
 
-	def update(self, request, *args, **kwargs):
-		server = self.get_object()
-		game_type = request.query_params.get("game_type", False)  # type str
-		server_type = int(request.query_params.get("server_type", 0))
 
-		server.game_type = int(game_type) if game_type else False
-		server.server_type = server_type if server_type else False
+@api_view(["PUT"])
+@permission_classes([IsValidServer])
+def assign_server(request, pk):
+	"""
+	Function to assign server to dedicated game host. Host authorises itself by default server profile login & password,
+	passes it's ip and port address, gets token for this server
+	"""
+	ip = request.data.get("ip", False)
+	port = request.data.get("port", False)
+	response = {
+		'data': dict(),
+		'status': status.HTTP_200_OK
+	}
+	try:
+		server = Server.objects.get(pk=pk)
+	except Server.DoesNotExist:
+		response['data'] = {"detail": "server not found"}
+		response['status'] = status.HTTP_404_NOT_FOUND
+	else:
+		server.host_address = ip
+		server.port = port
+		server.status = 1
 		server.save()
-		response = ServerSerializer(server, context={"request": request})
-		return Response(response.data, status=status.HTTP_202_ACCEPTED)
+		response['data'] = GameServerSeriazlizer(server, context={"request": request})
+	return Response(data=response['data'].data, status=response['status'])
+
+
+@api_view(["PUT"])
+@permission_classes([IsValidGameServer])
+def update_server_state(request, ):
+	"""
+	Function to update server status
+	"""
+	token = request.data.get("token", False)
+	status = request.data.get("status", False)
+	if token and status:
+		server = Server.objects.get(token=token)
+		server.status = status
+		server.save()
+	return Response(data={"detail": "Successfully changed state"})
 
 
 class InviteListView(generics.ListCreateAPIView):

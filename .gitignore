@@ -92,3 +92,4 @@ node_modules
 **/migrations/*
 /static/
 Store.md
+Game Server.md
