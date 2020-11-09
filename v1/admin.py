@@ -97,7 +97,7 @@ class UserWeaponConfigInline(admin.TabularInline):
 
 class UserWeaponAdmin(admin.ModelAdmin):
 	inlines = (UserWeaponConfigInline, )
-	list_display = ("id", "__str__", "weapon_with_addons", "date_added")
+	list_display = ("id", "__str__", "weapon_with_addons", "date_added", "main")
 	list_display_links = ("id", "__str__")
 	list_select_related = True
 	ordering = ("-date_added", )
@@ -108,7 +108,7 @@ class UserWeaponAdmin(admin.ModelAdmin):
 	autocomplete_fields = ("profile", "weapon_with_addons")
 	fieldsets = (
 		(None, {
-			"fields": (("profile", "weapon_with_addons"), "date_added")
+			"fields": (("profile", "weapon_with_addons"), "date_added", "main")
 		}),
 		("Addons available for this user for this weapon", {
 			"fields": (

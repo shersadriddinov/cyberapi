@@ -402,6 +402,7 @@ class UserWeapon(models.Model):
 	profile = models.ForeignKey(Profile, on_delete=models.CASCADE, verbose_name=_("User"))
 	weapon_with_addons = models.ForeignKey(WeaponAddons, on_delete=models.CASCADE, verbose_name=_("Weapon with Addons"))
 	date_added = models.DateTimeField(verbose_name=_("Date Added"), default=timezone.now)
+	main = models.BooleanField(verbose_name=_("Main Weapon"), default=False, blank=True)
 	user_addon_stock = ArrayField(
 		models.PositiveIntegerField(blank=True),
 		default=list,
