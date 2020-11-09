@@ -51,3 +51,30 @@ class IsValidGameServer(BasePermission):
 			return False
 		else:
 			return True
+
+
+class IsUserORValidServer(BasePermission):
+	def has_permission(self, request, view):
+		if request.META.get('HTTP_AUTHORIZATION') is not None:
+			user_key = request.META.get('HTTP_AUTHORIZATION').split(" ")[1]
+			try:
+				Token.objects.filter(key=user_key)
+			except Token.DoesNotExist:
+				return False
+			else:
+				return True
+		else:
+			login = request.data.get('login', False)
+			password = request.data.get("password", False)
+			default = User.objects.get(username=DEFAULT_SERVER_PROFILE)
+
+			try:
+				user = User.objects.get(username=login)
+			except User.DoesNotExist:
+				return False
+			else:
+				if user.is_staff and user.username == default.username and check_password(password, default.password):
+
+					return True
+				else:
+					return False

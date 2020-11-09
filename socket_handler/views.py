@@ -190,6 +190,7 @@ class ServerListView(generics.ListCreateAPIView):
 	:return json containing server information
 	"""
 	pagination_class = LimitOffsetPagination
+	permission_classes = (IsUserORValidServer, )
 
 	def post(self, request, *args, **kwargs):
 		user = request.user
@@ -215,8 +216,6 @@ class ServerListView(generics.ListCreateAPIView):
 		server_filter.add(Q(game_type=int(game_type)), Q.AND) if game_type else False
 		server_filter.add(Q(status=int(status)), Q.AND) if status else False
 
-		print(server_filter)
-
 		return Server.objects.filter(server_filter).order_by(order)
 
 	def list(self, request, *args, **kwargs):
@@ -239,6 +238,7 @@ class ServerView(generics.RetrieveAPIView):
 
 	:return json containing server information
 	"""
+	permission_classes = (IsUserORValidServer, )
 	serializer_class = ServerSerializer
 	queryset = Server.objects.all()
 	lookup_field = "pk"

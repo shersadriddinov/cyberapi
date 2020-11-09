@@ -258,6 +258,20 @@ class Profile(models.Model):
 		related_name="profile_lot",
 		through="store.UserLots"
 	)
+	battle_pass = models.ManyToManyField(
+		"store.BattlePass",
+		blank=True,
+		verbose_name=_("User Battle Pass"),
+		related_name="profile_battle_pass",
+		through="store.UserBattlePass"
+	)
+	user_tasks = models.ManyToManyField(
+		"store.Task",
+		blank=True,
+		verbose_name=_("User Tasks"),
+		related_name="profile_tasks",
+		through="store.UserTask"
+	)
 
 	class Meta:
 		db_table = 'profile'

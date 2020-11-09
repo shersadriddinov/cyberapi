@@ -26,8 +26,8 @@ class Lot(models.Model):
 		null=False,
 		default=0,
 		blank=True,
-		help_text=_('Price'),
-		verbose_name=_("Could be in balance or donat value")
+		help_text=_('Could be in balance or donat value'),
+		verbose_name=_("Price")
 	)
 	status = models.BooleanField(
 		default=True,
@@ -124,3 +124,132 @@ class UserLots(models.Model):
 					user_weapon.user_addon_stock.append(scope.id)
 					break
 		super(UserLots, self).save(force_insert, force_update, using, update_fields)
+
+
+class BattlePass(models.Model):
+	"""
+	Model to represent available game battle passes
+	"""
+	title = models.CharField(max_length=256, verbose_name=_("Title"), null=False, blank=False)
+	status = models.BooleanField(default=True, blank=True, verbose_name=_("Status"), help_text=_("Is battle pass active"))
+	expires = models.PositiveIntegerField(
+		verbose_name=_("Expires"),
+		help_text=_("Hours to expire from purchase"),
+		null=True,
+		blank=True,
+	)
+	price = models.PositiveIntegerField(null=False, blank=False, help_text=_('Could be only in donat value'), verbose_name=_("Price"))
+	reward = models.PositiveIntegerField(null=False, blank=False, help_text=_('Could be only in balance value'), verbose_name=_("Reward"))
+	date_created = models.DateTimeField(
+		db_column='date_created',
+		null=False,
+		blank=False,
+		default=timezone.now,
+		verbose_name=_("Date Created"),
+		help_text=_("Date when the object was added to database")
+	)
+	tasks = models.ManyToManyField(
+		"Task",
+		verbose_name=_("Tasks"),
+		help_text=_("Select Tasks for this Battle Pass"),
+		blank=False
+	)
+
+	class Meta:
+		verbose_name = _("Battle Pass")
+		verbose_name_plural = _("Battle Passes")
+		ordering = ("-date_created", )
+
+
+class Task(models.Model):
+	"""
+	Model to represent available tasks for BattlePasses
+	"""
+	title = models.CharField(max_length=256, verbose_name=_("Title"), null=False, blank=False)
+	status = models.BooleanField(default=True, blank=True, verbose_name=_("Status"), help_text=_("Is task active"))
+	target_score = models.PositiveIntegerField(
+		null=False,
+		blank=False,
+		help_text=_('Score required to complete this task'),
+		verbose_name=_("Target Score")
+	)
+	date_created = models.DateTimeField(
+		db_column='date_created',
+		null=False,
+		blank=False,
+		default=timezone.now,
+		verbose_name=_("Date Created"),
+		help_text=_("Date when the object was added to database")
+	)
+
+	class Meta:
+		verbose_name = _("Task")
+		verbose_name_plural = _("Tasks")
+		ordering = ("-date_created", )
+
+
+class UserBattlePass(models.Model):
+	"""
+	Model to represent user purchased battle passes
+	"""
+	profile = models.ForeignKey(Profile, on_delete=models.CASCADE, verbose_name=_("User"))
+	battle_pass = models.ForeignKey(BattlePass, on_delete=models.CASCADE, verbose_name=_("Battle Pass"))
+	user_tasks = models.ManyToManyField("UserTask", blank=True, verbose_name=_("User Tasks"))
+	status = models.BooleanField(default=True, blank=True, verbose_name=_("Status"), help_text=_("Is battle pass complete"))
+	task_counter = models.PositiveSmallIntegerField(
+		null=False,
+		blank=True,
+		help_text=_('Tasks left to complete'),
+		verbose_name=_("Task Counter"),
+	)
+	date_purchased = models.DateTimeField(
+		null=False,
+		blank=False,
+		default=timezone.now,
+		verbose_name=_("Date Purchased"),
+		help_text=_("Date when user has purchased object")
+	)
+
+	class Meta:
+		verbose_name = _("User Battle Pass")
+		verbose_name_plural = _("User Battle Passes")
+		ordering = ("-date_purchased", )
+
+
+class UserTask(models.Model):
+	"""
+	Model to represent user tasks for user battle pass
+	"""
+	profile = models.ForeignKey(Profile, on_delete=models.CASCADE, verbose_name=_("User"))
+	status = models.BooleanField(default=True, blank=True, verbose_name=_("Status"), help_text=_("Is task complete"))
+	task = models.ForeignKey(Task, on_delete=models.CASCADE, verbose_name=_("Task"))
+	current_score = models.PositiveIntegerField(
+		null=False,
+		blank=False,
+		help_text=_('Score user achieved to complete this task'),
+		verbose_name=_("Current Score")
+	)
+	date_started = models.DateTimeField(
+		null=False,
+		blank=False,
+		default=timezone.now,
+		verbose_name=_("Date Task Started"),
+		help_text=_("Date when user started task completion")
+	)
+	expires = models.PositiveIntegerField(
+		verbose_name=_("Expires"),
+		help_text=_("Hours to expire from purchase"),
+		null=True,
+		blank=True,
+	)
+	game_counter = models.PositiveSmallIntegerField(
+		null=True,
+		blank=True,
+		help_text=_('Games user played to complete the task'),
+		verbose_name=_("Game Counter"),
+	)
+
+	class Meta:
+		verbose_name = _("User Task")
+		verbose_name_plural = _("User Tasks")
+		ordering = ("-date_started", )
