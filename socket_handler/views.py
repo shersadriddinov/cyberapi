@@ -190,7 +190,7 @@ class ServerListView(generics.ListCreateAPIView):
 	:return json containing server information
 	"""
 	pagination_class = LimitOffsetPagination
-	permission_classes = [IsAuthenticated, IsValidGameServer]
+	permission_classes = (IsUserORValidServer, )
 
 	def post(self, request, *args, **kwargs):
 		user = request.user
@@ -238,8 +238,8 @@ class ServerView(generics.RetrieveAPIView):
 
 	:return json containing server information
 	"""
+	permission_classes = (IsUserORValidServer, )
 	serializer_class = ServerSerializer
-	permission_classes = [IsAuthenticated, IsValidGameServer]
 	queryset = Server.objects.all()
 	lookup_field = "pk"
 

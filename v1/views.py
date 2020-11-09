@@ -5,9 +5,9 @@ from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import generics
 
-from socket_handler.permissions import IsValidGameServer
+from socket_handler.permissions import IsValidGameServer, IsValidServer
 from .serializers import *
-from .permissions import IsNewUser, IsUserTokenBelongToUser
+from .permissions import IsNewUser, IsUserTokenBelongToUser, IsValidServerORTokenMatches
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
@@ -206,7 +206,7 @@ class UserProfile(generics.RetrieveUpdateDestroyAPIView):
 	:return json containing user information
 	"""
 	serializer_class = GeneralUserSerializer
-	permission_classes = (IsUserTokenBelongToUser, IsValidGameServer)
+	permission_classes = (IsValidServerORTokenMatches, )
 	lookup_field = u'pk'
 
 	def get_queryset(self):
@@ -234,54 +234,60 @@ class UserProfile(generics.RetrieveUpdateDestroyAPIView):
 
 	def update(self, request, *args, **kwargs):
 		user = self.get_object()
-		username = request.data.get('username', False)
-		first_name = request.data.get('first_name', False)
-		email = request.data.get('email', False)
-		client_settings_json = request.data.get('client_settings_json', False)
-		password = request.data.get('password', False)
-		main = int(request.data.get("main_character", False))
+		if request.user is user:
+			username = request.data.get('username', False)
+			first_name = request.data.get('first_name', False)
+			email = request.data.get('email', False)
+			client_settings_json = request.data.get('client_settings_json', False)
+			password = request.data.get('password', False)
+			main = int(request.data.get("main_character", False))
 
-		user.username = username if username else user.username
-		user.first_name = first_name if first_name else user.first_name
-		user.email = email if email else user.email
-		user.profile.client_settings_json = client_settings_json if client_settings_json else user.profile.client_settings_json
-		if password:
-			user.set_password(password)
-		user.save()
-		if main:
+			user.username = username if username else user.username
+			user.first_name = first_name if first_name else user.first_name
+			user.email = email if email else user.email
+			user.profile.client_settings_json = client_settings_json if client_settings_json else user.profile.client_settings_json
+			if password:
+				user.set_password(password)
+			user.save()
+			if main:
+				try:
+					user_character = UserCharacter.objects.get(id=main)
+					user_character.main = True
+					user_character.save()
+				except UserCharacter.DoesNotExist:
+					return Response(data={"detail": "No such user weapon"}, status=status.HTTP_404_NOT_FOUND)
+
+			response = {
+				"id": user.id,
+				"username": user.username,
+				"first_name": user.first_name,
+				"email": user.email,
+				"balance": user.profile.balance,
+				"donate": user.profile.donate,
+				"karma": user.profile.karma,
+				"client_settings_json": user.profile.client_settings_json,
+			}
 			try:
-				user_character = UserCharacter.objects.get(id=main)
-				user_character.main = True
-				user_character.save()
+				main_character = UserCharacter.objects.get(profile=user.profile, main=True).id
+				response['main_character'] = main_character
 			except UserCharacter.DoesNotExist:
-				return Response(data={"detail": "No such user weapon"}, status=status.HTTP_404_NOT_FOUND)
-
-		response = {
-			"id": user.id,
-			"username": user.username,
-			"first_name": user.first_name,
-			"email": user.email,
-			"balance": user.profile.balance,
-			"donate": user.profile.donate,
-			"karma": user.profile.karma,
-			"client_settings_json": user.profile.client_settings_json,
-		}
-		try:
-			main_character = UserCharacter.objects.get(profile=user.profile, main=True).id
-			response['main_character'] = main_character
-		except UserCharacter.DoesNotExist:
-			default_characters_list = [item.id for item in Character.objects.filter(default=True)]
-			response['default_characters_list'] = default_characters_list
-		return Response(data=response, status=status.HTTP_200_OK)
+				default_characters_list = [item.id for item in Character.objects.filter(default=True)]
+				response['default_characters_list'] = default_characters_list
+			return Response(data=response, status=status.HTTP_200_OK)
+		else:
+			return Response(data={"detail": "You are not allowed to change details"})
 
 	def destroy(self, request, *args, **kwargs):
 		user = self.get_object()
-		user.is_active = False
-		user.save()
-		response = {
-			'detail': 'User moved to non active, your data still remains'
-		}
-		return Response(data=response, status=status.HTTP_200_OK)
+		if request.user is user:
+			user.is_active = False
+			user.save()
+			response = {
+				'detail': 'User moved to non active, your data still remains'
+			}
+			return Response(data=response, status=status.HTTP_200_OK)
+		else:
+			return Response(data={"detail": "You are not allowed to change details"})
 
 
 class CharacterListView(generics.ListAPIView):
@@ -527,7 +533,6 @@ class UsersList(generics.ListAPIView):
 	"""
 	serializer_class = UserListSerializer
 	pagination_class = LimitOffsetPagination
-	permission_classes = [IsAuthenticated, IsValidGameServer]
 
 	def get_queryset(self):
 		order = self.request.query_params.get('order', '-date_joined')
@@ -595,7 +600,6 @@ class UserConfigView(generics.ListCreateAPIView):
 	"""
 	serializer_class = UserWeaponConfigSerializer
 	pagination_class = LimitOffsetPagination
-	permission_classes = [IsAuthenticated, IsValidGameServer]
 
 	def get_queryset(self):
 		order = self.request.query_params.get('order', '-date_created')
