@@ -34,6 +34,16 @@ class CharacterSerializer(serializers.ModelSerializer):
 		fields = ("id", "tech_name", "default")
 
 
+class UserCharacterSerializer(serializers.ModelSerializer):
+	"""
+
+	"""
+
+	class Meta:
+		model = UserCharacter
+		fields = ("id", "profile", "character", "date_added", "main")
+
+
 class UserWeaponSerializer(serializers.ModelSerializer):
 	"""
 
@@ -42,7 +52,7 @@ class UserWeaponSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = UserWeapon
 		fields = (
-			"id", "profile", "weapon_with_addons",
+			"id", "profile", "weapon_with_addons", "main",
 			"user_addon_stock", "user_addon_barrel", "user_addon_muzzle",
 			"user_addon_mag", "user_addon_scope", "user_addon_grip"
 		)
@@ -56,8 +66,6 @@ class GeneralUserSerializer(serializers.ModelSerializer):
 	donate = serializers.IntegerField(source='profile.donate', read_only=True)
 	karma = serializers.IntegerField(source='profile.karma', read_only=True)
 	client_settings_json = serializers.JSONField(source='profile.client_settings_json')
-	character = CharacterSerializer(many=True)
-	weapon = UserWeaponSerializer(many=True)
 
 	class Meta:
 		model = User
@@ -65,7 +73,6 @@ class GeneralUserSerializer(serializers.ModelSerializer):
 			"id", "username", "first_name",
 			"email", "balance", "donate",
 			"karma", "client_settings_json",
-			"character", "weapon"
 		)
 		read_only_fields = ("balance", "donate", "karma",)
 
@@ -141,20 +148,6 @@ class WeaponAddonSerializer(serializers.Serializer):
 	mag = AddonSerializer(many=True)
 	scope = AddonSerializer(many=True)
 	grip = AddonSerializer(many=True)
-
-
-class UserWeaponSerializer(serializers.ModelSerializer):
-	"""
-
-	"""
-
-	class Meta:
-		model = UserWeapon
-		fields = (
-			"id", "profile", "weapon_with_addons",
-			"user_addon_stock", "user_addon_barrel", "user_addon_muzzle",
-			"user_addon_mag", "user_addon_scope", "user_addon_grip"
-		)
 
 
 class UserWeaponConfigSerializer(serializers.ModelSerializer):

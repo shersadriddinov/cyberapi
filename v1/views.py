@@ -181,6 +181,7 @@ def set_default_weapon(request, pk):
 			UserWeapon.objects.create(
 				profile=request.user.profile,
 				weapon_with_addons=weapon_addon,
+				main=True
 			)
 			response = {"detail": "Successfully added weapon to user"}
 			response_status = status.HTTP_200_OK
@@ -225,11 +226,17 @@ class UserProfile(generics.RetrieveUpdateDestroyAPIView):
 			"client_settings_json": user.profile.client_settings_json,
 		}
 		try:
-			main_character = UserCharacter.objects.get(profile=user.profile, main=True).id
+			main_character = UserCharacter.objects.get(profile=user.profile, main=True).character.id
 			response['main_character'] = main_character
 		except UserCharacter.DoesNotExist:
 			default_characters_list = [item.id for item in Character.objects.filter(default=True)]
 			response['default_characters_list'] = default_characters_list
+		try:
+			main_weapon = UserWeapon.objects.get(profile=user.profile, main=True).weapon_with_addons.weapon.id
+			response['main_weapon'] = main_weapon
+		except UserWeapon.DoesNotExist:
+			default_weapon_list = [item.id for item in Weapon.objects.filter(default=True)]
+			response['default_weapon_list'] = default_weapon_list
 		return Response(data=response, status=status.HTTP_200_OK)
 
 	def update(self, request, *args, **kwargs):
@@ -290,6 +297,14 @@ class UserProfile(generics.RetrieveUpdateDestroyAPIView):
 			return Response(data={"detail": "You are not allowed to change details"})
 
 
+@api_view(['GET', ])
+@permission_classes([IsValidServerORTokenMatches, ])
+def get_main_character(request, pk):
+	main = UserCharacter.objects.filter(profile=User.objects.get(pk=pk).profile, main=True)[0]
+	response = UserCharacterSerializer(main, context={"request": request})
+	return Response(response.data, status=status.HTTP_200_OK)
+
+
 class CharacterListView(generics.ListAPIView):
 	"""
 	Returns a list containing either all character or only user character if specified with `user_only` param. User is
@@ -326,7 +341,7 @@ class CharacterListView(generics.ListAPIView):
 		return Response(response.data)
 
 
-class CharacterView(generics.RetrieveDestroyAPIView):
+class CharacterView(generics.RetrieveUpdateDestroyAPIView):
 	"""
 	Get or delete character from user, depending on requests's method used. User is identified by token used in request.
 
@@ -336,6 +351,20 @@ class CharacterView(generics.RetrieveDestroyAPIView):
 	serializer_class = CharacterSerializer
 	queryset = Character.objects.filter(hidden=False)
 	lookup_field = "pk"
+
+	def update(self, request, *args, **kwargs):
+		response = dict()
+		character = self.get_object()
+		user_character = UserCharacter.objects.filter(profile=request.user, character=character)
+		if user_character:
+			user_character.main = True
+			user_character.save()
+			response['detail'] = "Successfully made main character"
+			response_status = status.HTTP_200_OK
+		else:
+			response['detail'] = "Character given not found in user characters"
+			response_status = status.HTTP_404_NOT_FOUND
+		return Response(data=response, status=response_status)
 
 	def destroy(self, request, *args, **kwargs):
 		response = dict()
@@ -374,6 +403,14 @@ def add_character_to_user(request, pk):
 		response['detail'] = "Successfully added to user characters"
 		response_status = status.HTTP_200_OK
 	return Response(data=response, status=response_status)
+
+
+@api_view(['GET', ])
+@permission_classes([IsValidServerORTokenMatches, ])
+def get_main_weapon(request, pk):
+	main = UserWeapon.objects.filter(profile=User.objects.get(pk=pk).profile, main=True)[0]
+	response = UserWeaponSerializer(main, context={"request": request})
+	return Response(response.data, status=status.HTTP_200_OK)
 
 
 class WeaponListView(generics.ListAPIView):
@@ -465,6 +502,7 @@ class WeaponView(generics.RetrieveUpdateDestroyAPIView):
 			mag = request.data.get('mag', False)
 			grip = request.data.get('grip', False)
 			scope = request.data.get('scope', False)
+			main = request.data.get('main', False)
 
 			user_weapon.user_addon_stock.append(stock)
 			user_weapon.user_addon_barrel.append(barrel)
@@ -472,6 +510,7 @@ class WeaponView(generics.RetrieveUpdateDestroyAPIView):
 			user_weapon.user_addon_mag.append(mag)
 			user_weapon.user_addon_grip.append(grip)
 			user_weapon.user_addon_scope.append(scope)
+			user_weapon.main = True if main else False
 
 			user_weapon.save()
 			response = UserWeaponSerializer(user_weapon, context={"request": request})

@@ -16,11 +16,13 @@ urlpatterns = [
 	path('user/config/<int:pk>/', views.UserConfigUpdateView.as_view()),
 
 	# Character
+	path('character/main/<int:pk>/', views.get_main_character),
 	path('character/list/', views.CharacterListView.as_view()),
 	path('character/<int:pk>/', views.CharacterView.as_view()),
 	path('character/<int:pk>/add', views.add_character_to_user),
 
 	# Weapon
+	path('weapon/main/<int:pk>/', views.get_main_weapon),
 	path('weapon/list/', views.WeaponListView.as_view()),
 	path('weapon/<int:pk>/', views.WeaponView.as_view()),
 	path('weapon/<int:pk>/add', views.add_weapon_to_user),

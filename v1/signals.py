@@ -95,3 +95,15 @@ def set_new_main_character(sender, instance, created, **kwargs):
 		if previous:
 			previous.main = False
 			previous.save()
+
+
+@receiver(post_save, sender=UserWeapon)
+def remove_previous_main(sender, instance, created, **kwargs):
+	"""
+	After making a weapon main check for previous main character and make in False if True
+	"""
+	if instance.main:
+		previous = UserWeapon.objects.filter(profile=instance.profile, main=True).exclude(pk=instance.pk).first()
+		if previous:
+			previous.main = False
+			previous.save()
