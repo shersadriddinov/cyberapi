@@ -24,6 +24,30 @@ class ClientSettingsJSONSerializer(serializers.ModelSerializer):
 		fields = ('client_settings_json', )
 
 
+class CharacterSerializer(serializers.ModelSerializer):
+	"""
+
+	"""
+
+	class Meta:
+		model = Character
+		fields = ("id", "tech_name", "default")
+
+
+class UserWeaponSerializer(serializers.ModelSerializer):
+	"""
+
+	"""
+
+	class Meta:
+		model = UserWeapon
+		fields = (
+			"id", "profile", "weapon_with_addons",
+			"user_addon_stock", "user_addon_barrel", "user_addon_muzzle",
+			"user_addon_mag", "user_addon_scope", "user_addon_grip"
+		)
+
+
 class GeneralUserSerializer(serializers.ModelSerializer):
 	"""
 	All :model:`User` fields
@@ -32,6 +56,8 @@ class GeneralUserSerializer(serializers.ModelSerializer):
 	donate = serializers.IntegerField(source='profile.donate', read_only=True)
 	karma = serializers.IntegerField(source='profile.karma', read_only=True)
 	client_settings_json = serializers.JSONField(source='profile.client_settings_json')
+	character = CharacterSerializer(many=True)
+	weapon = UserWeaponSerializer(many=True)
 
 	class Meta:
 		model = User
@@ -39,6 +65,7 @@ class GeneralUserSerializer(serializers.ModelSerializer):
 			"id", "username", "first_name",
 			"email", "balance", "donate",
 			"karma", "client_settings_json",
+			"character", "weapon"
 		)
 		read_only_fields = ("balance", "donate", "karma",)
 
@@ -64,16 +91,6 @@ class UserListSerializer(serializers.ModelSerializer):
 
 class UserUnrealSerializer(serializers.Serializer):
 	users = UserListSerializer(many=True)
-
-
-class CharacterSerializer(serializers.ModelSerializer):
-	"""
-
-	"""
-
-	class Meta:
-		model = Character
-		fields = ("id", "tech_name", "default")
 
 
 class WeaponSerializer(serializers.ModelSerializer):

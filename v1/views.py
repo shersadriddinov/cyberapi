@@ -4,6 +4,8 @@ from django.contrib.auth.hashers import check_password
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import generics
+
+from socket_handler.permissions import IsValidGameServer
 from .serializers import *
 from .permissions import IsNewUser, IsUserTokenBelongToUser
 from rest_framework import status
@@ -204,7 +206,7 @@ class UserProfile(generics.RetrieveUpdateDestroyAPIView):
 	:return json containing user information
 	"""
 	serializer_class = GeneralUserSerializer
-	permission_classes = (IsUserTokenBelongToUser, )
+	permission_classes = (IsUserTokenBelongToUser, IsValidGameServer)
 	lookup_field = u'pk'
 
 	def get_queryset(self):
@@ -525,6 +527,7 @@ class UsersList(generics.ListAPIView):
 	"""
 	serializer_class = UserListSerializer
 	pagination_class = LimitOffsetPagination
+	permission_classes = [IsAuthenticated, IsValidGameServer]
 
 	def get_queryset(self):
 		order = self.request.query_params.get('order', '-date_joined')
@@ -561,6 +564,7 @@ class UserSearchView(generics.ListAPIView):
 	"""
 	serializer_class = UserListSerializer
 	pagination_class = LimitOffsetPagination
+	permission_classes = [IsAuthenticated, IsValidGameServer]
 
 	def get_queryset(self):
 		order = self.request.query_params.get('order', '-date_joined')
@@ -591,6 +595,7 @@ class UserConfigView(generics.ListCreateAPIView):
 	"""
 	serializer_class = UserWeaponConfigSerializer
 	pagination_class = LimitOffsetPagination
+	permission_classes = [IsAuthenticated, IsValidGameServer]
 
 	def get_queryset(self):
 		order = self.request.query_params.get('order', '-date_created')
