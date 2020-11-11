@@ -191,6 +191,32 @@ def set_default_weapon(request, pk):
 		return Response(data=response, status=response_status)
 
 
+def temp_user_profile_get(user):
+	response = {
+		"id": user.id,
+		"username": user.username,
+		"first_name": user.first_name,
+		"email": user.email,
+		"balance": user.profile.balance,
+		"donate": user.profile.donate,
+		"karma": user.profile.karma,
+		"client_settings_json": user.profile.client_settings_json,
+	}
+	try:
+		main_character = UserCharacter.objects.get(profile=user.profile, main=True).character.id
+		response['main_character'] = main_character
+	except UserCharacter.DoesNotExist:
+		default_characters_list = [item.id for item in Character.objects.filter(default=True)]
+		response['default_characters_list'] = default_characters_list
+	try:
+		main_weapon = UserWeapon.objects.get(profile=user.profile, main=True).weapon_with_addons.weapon.id
+		response['main_weapon'] = main_weapon
+	except UserWeapon.DoesNotExist:
+		default_weapon_list = [item.id for item in Weapon.objects.filter(default=True)]
+		response['default_weapon_list'] = default_weapon_list
+	return response
+
+
 class UserProfile(generics.RetrieveUpdateDestroyAPIView):
 	"""
 	Get, update, delete user information, depending on requests's method used. User is identified by user id passed.
@@ -214,29 +240,7 @@ class UserProfile(generics.RetrieveUpdateDestroyAPIView):
 		return User.objects.filter(is_active=True)
 
 	def get(self, request, *args, **kwargs):
-		user = self.get_object()
-		response = {
-			"id": user.id,
-			"username": user.username,
-			"first_name": user.first_name,
-			"email": user.email,
-			"balance": user.profile.balance,
-			"donate": user.profile.donate,
-			"karma": user.profile.karma,
-			"client_settings_json": user.profile.client_settings_json,
-		}
-		try:
-			main_character = UserCharacter.objects.get(profile=user.profile, main=True).character.id
-			response['main_character'] = main_character
-		except UserCharacter.DoesNotExist:
-			default_characters_list = [item.id for item in Character.objects.filter(default=True)]
-			response['default_characters_list'] = default_characters_list
-		try:
-			main_weapon = UserWeapon.objects.get(profile=user.profile, main=True).weapon_with_addons.weapon.id
-			response['main_weapon'] = main_weapon
-		except UserWeapon.DoesNotExist:
-			default_weapon_list = [item.id for item in Weapon.objects.filter(default=True)]
-			response['default_weapon_list'] = default_weapon_list
+		response = temp_user_profile_get(self.get_object())
 		return Response(data=response, status=status.HTTP_200_OK)
 
 	def update(self, request, *args, **kwargs):
@@ -282,7 +286,8 @@ class UserProfile(generics.RetrieveUpdateDestroyAPIView):
 				response['default_characters_list'] = default_characters_list
 			return Response(data=response, status=status.HTTP_200_OK)
 		else:
-			return Response(data={"detail": "You are not allowed to change details"})
+			response = temp_user_profile_get(self.get_object())
+			return Response(data=response)
 
 	def destroy(self, request, *args, **kwargs):
 		user = self.get_object()
