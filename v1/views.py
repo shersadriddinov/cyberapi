@@ -205,13 +205,18 @@ def temp_user_profile_get(user):
 	try:
 		main_character = UserCharacter.objects.get(profile=user.profile, main=True).character.id
 		response['main_character'] = main_character
+		user_config = UserWeaponConfig.objects.get(character=main_character, weapon__profile=user.profile)
+		response['weapon'] = user_config.weapon.weapon_with_addons.weapon.id
+		response['stock'] = user_config.stock.id
+		response['barrel'] = user_config.barrel.id
+		response['muzzle'] = user_config.muzzle.id
+		response['mag'] = user_config.mag.id
+		response['scope'] = user_config.scope.id
+		response['grip'] = user_config.grip.id
 	except UserCharacter.DoesNotExist:
 		default_characters_list = [item.id for item in Character.objects.filter(default=True)]
 		response['default_characters_list'] = default_characters_list
-	try:
-		main_weapon = UserWeapon.objects.get(profile=user.profile, main=True).weapon_with_addons.weapon.id
-		response['main_weapon'] = main_weapon
-	except UserWeapon.DoesNotExist:
+	except UserWeaponConfig.DoesNotExist:
 		default_weapon_list = [item.id for item in Weapon.objects.filter(default=True)]
 		response['default_weapon_list'] = default_weapon_list
 	return response
@@ -268,22 +273,7 @@ class UserProfile(generics.RetrieveUpdateDestroyAPIView):
 				except UserCharacter.DoesNotExist:
 					return Response(data={"detail": "No such user weapon"}, status=status.HTTP_404_NOT_FOUND)
 
-			response = {
-				"id": user.id,
-				"username": user.username,
-				"first_name": user.first_name,
-				"email": user.email,
-				"balance": user.profile.balance,
-				"donate": user.profile.donate,
-				"karma": user.profile.karma,
-				"client_settings_json": user.profile.client_settings_json,
-			}
-			try:
-				main_character = UserCharacter.objects.get(profile=user.profile, main=True).id
-				response['main_character'] = main_character
-			except UserCharacter.DoesNotExist:
-				default_characters_list = [item.id for item in Character.objects.filter(default=True)]
-				response['default_characters_list'] = default_characters_list
+			response = temp_user_profile_get(user)
 			return Response(data=response, status=status.HTTP_200_OK)
 		else:
 			response = temp_user_profile_get(self.get_object())
@@ -360,7 +350,7 @@ class CharacterView(generics.RetrieveUpdateDestroyAPIView):
 	def update(self, request, *args, **kwargs):
 		response = dict()
 		character = self.get_object()
-		user_character = UserCharacter.objects.filter(profile=request.user, character=character)
+		user_character = UserCharacter.objects.get(profile=request.user.profile, character=character)
 		if user_character:
 			user_character.main = True
 			user_character.save()
