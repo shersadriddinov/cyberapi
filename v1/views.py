@@ -129,7 +129,7 @@ class Auth(generics.CreateAPIView):
 				user=user,
 				token=token,
 				default_characters=Character.objects.filter(default=True, hidden=False),
-				start_weapons=Weapon.objects.filter(start=True, hidden=False)
+				start_weapons=Weapon.objects.filter(start=True, hidden=False, default=True)
 			)
 			response = NewUserSerializer(new_user, context={'request': request})
 			return Response(response.data, status=status.HTTP_201_CREATED)

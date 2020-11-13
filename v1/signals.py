@@ -31,19 +31,19 @@ def create_weapon_with_addons(sender, instance, created, **kwargs):
 		WeaponAddons.objects.create(weapon=instance)
 
 
-@receiver(post_save, sender=Weapon)
-def add_default_weapon_for_all(sender, instance, created, **kwargs):
-	"""
-	Auto add weapon to all users if weapon is marked as a default
-	"""
-	if instance.default and not instance.hidden and getattr(instance, 'from_admin_site', False) and not created:
-		weapon_with_addons = WeaponAddons.objects.get(weapon=instance)
-		users = Profile.objects.all()
-		for user in users:
-			try:
-				UserWeapon.objects.get(profile=user, weapon_with_addons=weapon_with_addons)
-			except ObjectDoesNotExist:
-				UserWeapon.objects.create(profile=user, weapon_with_addons=weapon_with_addons)
+# @receiver(post_save, sender=Weapon)
+# def add_default_weapon_for_all(sender, instance, created, **kwargs):
+# 	"""
+# 	Auto add weapon to all users if weapon is marked as a default
+# 	"""
+# 	if instance.default and not instance.hidden and getattr(instance, 'from_admin_site', False) and not created:
+# 		weapon_with_addons = WeaponAddons.objects.get(weapon=instance)
+# 		users = Profile.objects.all()
+# 		for user in users:
+# 			try:
+# 				UserWeapon.objects.get(profile=user, weapon_with_addons=weapon_with_addons)
+# 			except ObjectDoesNotExist:
+# 				UserWeapon.objects.create(profile=user, weapon_with_addons=weapon_with_addons)
 
 
 @receiver(post_save, sender=UserWeapon)
@@ -71,18 +71,18 @@ def create_weapon_with_addons(sender, instance, created, **kwargs):
 		)
 
 
-@receiver(post_save, sender=Profile)
-def add_default_weapons_with_addons_to_new_user(sender, instance, created, **kwargs):
-	"""
-	Auto add all default weapons for each new :model:`Profile` instance
-	"""
-	if created:
-		default_weapons = WeaponAddons.objects.filter(weapon__default=True, weapon__hidden=False)
-		for weapon in default_weapons:
-			UserWeapon.objects.create(
-				profile=instance,
-				weapon_with_addons=weapon,
-			)
+# @receiver(post_save, sender=Profile)
+# def add_default_weapons_with_addons_to_new_user(sender, instance, created, **kwargs):
+# 	"""
+# 	Auto add all default weapons for each new :model:`Profile` instance
+# 	"""
+# 	if created:
+# 		default_weapons = WeaponAddons.objects.filter(weapon__default=True, weapon__hidden=False)
+# 		for weapon in default_weapons:
+# 			UserWeapon.objects.create(
+# 				profile=instance,
+# 				weapon_with_addons=weapon,
+# 			)
 
 
 @receiver(post_save, sender=UserCharacter)
