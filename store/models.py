@@ -89,39 +89,54 @@ class UserLots(models.Model):
 		ordering = ("-date_purchased", )
 
 	def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+		# Add all characters in slot to user
 		for character in self.lot.character.all():
-			UserCharacter.objects.create(profile=self.user.profile, character=character)
+			UserCharacter.objects.get_or_create(character=character, profile=self.user)
+		# Add all weapons on lot to user
 		for weapon in self.lot.weapons.all():
-			UserWeapon.objects.create(profile=self.user.profile, weapon_with_addons=WeaponAddons.objects.get(weapon=weapon))
+			weapon_with_addons = WeaponAddons.objects.get(weapon=weapon)
+			UserWeapon.objects.get_or_create(weapon_with_addons=weapon_with_addons, profile=self.user)
+		# Add stock from lot to available user_weapon object
 		for stock in self.lot.stock.all():
-			for user_weapon in UserWeapon.objects.filter(profile=self.user.profile):
-				if user_weapon.weapon_with_addons.filter(stock=stock).exists():
+			for user_weapon in UserWeapon.objects.filter(profile=self.user):
+				if stock in user_weapon.weapon_with_addons.stock.all() and stock.id not in user_weapon.user_addon_stock:
 					user_weapon.user_addon_stock.append(stock.id)
 					break
+		# Add barrel from lot to available user_weapon object
 		for barrel in self.lot.barrel.all():
-			for user_weapon in UserWeapon.objects.filter(profile=self.user.profile):
-				if user_weapon.weapon_with_addons.filter(barrel=barrel).exists():
-					user_weapon.user_addon_stock.append(barrel.id)
+			for user_weapon in UserWeapon.objects.filter(profile=self.user):
+				if barrel in user_weapon.weapon_with_addons.barrel.all() and barrel.id not in user_weapon.user_addon_barrel:
+					user_weapon.user_addon_barrel.append(barrel.id)
 					break
+		# Add stock from lot to available user_weapon object
 		for muzzle in self.lot.muzzle.all():
-			for user_weapon in UserWeapon.objects.filter(profile=self.user.profile):
-				if user_weapon.weapon_with_addons.filter(muzzle=muzzle).exists():
-					user_weapon.user_addon_stock.append(muzzle.id)
+			for user_weapon in UserWeapon.objects.filter(profile=self.user):
+				if muzzle in user_weapon.weapon_with_addons.muzzle.all() and muzzle.id not in user_weapon.user_addon_muzzle:
+					user_weapon.user_addon_muzzle.append(muzzle.id)
 					break
+		# Add mag from lot to available user_weapon object
 		for mag in self.lot.mag.all():
-			for user_weapon in UserWeapon.objects.filter(profile=self.user.profile):
-				if user_weapon.weapon_with_addons.filter(mag=mag).exists():
-					user_weapon.user_addon_stock.append(mag.id)
+			for user_weapon in UserWeapon.objects.filter(profile=self.user):
+				if mag in user_weapon.weapon_with_addons.mag.all() and mag.id not in user_weapon.user_addon_mag:
+					user_weapon.user_addon_mag.append(mag.id)
 					break
+		# Add grip from lot to available user_weapon object
 		for grip in self.lot.grip.all():
-			for user_weapon in UserWeapon.objects.filter(profile=self.user.profile):
-				if user_weapon.weapon_with_addons.filter(grip=grip).exists():
-					user_weapon.user_addon_stock.append(grip.id)
+			for user_weapon in UserWeapon.objects.filter(profile=self.user):
+				if grip in user_weapon.weapon_with_addons.grip.all() and grip.id not in user_weapon.user_addon_grip:
+					user_weapon.user_addon_grip.append(grip.id)
 					break
-		for scope in self.lot.stock.all():
-			for user_weapon in UserWeapon.objects.filter(profile=self.user.profile):
-				if user_weapon.weapon_with_addons.filter(scope=scope).exists():
-					user_weapon.user_addon_stock.append(scope.id)
+		# Add grip from lot to available user_weapon object
+		for grip in self.lot.grip.all():
+			for user_weapon in UserWeapon.objects.filter(profile=self.user):
+				if grip in user_weapon.weapon_with_addons.grip.all() and grip.id not in user_weapon.user_addon_grip:
+					user_weapon.user_addon_grip.append(grip.id)
+					break
+		# Add scope from lot to available user_weapon object
+		for scope in self.lot.scope.all():
+			for user_weapon in UserWeapon.objects.filter(profile=self.user):
+				if scope in user_weapon.weapon_with_addons.grip.all() and scope.id not in user_weapon.user_addon_scope:
+					user_weapon.user_addon_scope.append(scope.id)
 					break
 		super(UserLots, self).save(force_insert, force_update, using, update_fields)
 
