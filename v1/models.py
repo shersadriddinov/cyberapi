@@ -216,7 +216,7 @@ class Profile(models.Model):
 		verbose_name=_("Game Balance"),
 	)
 	donate = models.PositiveIntegerField(
-		db_column='column',
+		db_column='donat',
 		null=False,
 		default=0,
 		blank=True,
@@ -328,6 +328,7 @@ class UserCharacter(models.Model):
 	main = models.BooleanField(verbose_name=_("Main Character"), default=False, blank=True)
 
 	class Meta:
+		unique_together = ('profile', 'character')
 		db_table = "profile_character"
 		verbose_name = _("User & Character")
 		verbose_name_plural = _("Users & Characters")
@@ -487,7 +488,12 @@ class UserWeaponConfig(models.Model):
 		return self.weapon.profile.user.username + " config " + str(self.id)
 
 	def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-		if self.character in UserCharacter.objects.filter(profile=self.weapon.profile):
+		# Check if character and weapon addons are present in User Inventory
+		try:
+			UserCharacter.objects.get(profile=self.weapon.profile, character=self.character)
+		except UserCharacter.DoesNotExist:
+			return False
+		else:
 			if (
 					self.stock.pk in self.weapon.user_addon_stock and
 					self.barrel.pk in self.weapon.user_addon_barrel and
@@ -497,8 +503,5 @@ class UserWeaponConfig(models.Model):
 					self.grip.pk in self.weapon.user_addon_grip
 			):
 				super(UserWeaponConfig, self).save(force_insert, force_update, using, update_fields)
-				return True
 			else:
 				return False
-		else:
-			return False

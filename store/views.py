@@ -151,6 +151,7 @@ def purchase(request, pk):
 		'data': {"detail": "Lot has been successfully purchased"},
 		'status': status.HTTP_200_OK
 	}
+	# Retrieve money from required balance type
 	if lot.status:
 		if lot.premium and user.profile.donate >= lot.price:
 			user.profile.donate -= lot.price

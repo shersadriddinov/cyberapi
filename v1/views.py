@@ -129,7 +129,7 @@ class Auth(generics.CreateAPIView):
 				user=user,
 				token=token,
 				default_characters=Character.objects.filter(default=True, hidden=False),
-				start_weapons=Weapon.objects.filter(start=True, hidden=False)
+				start_weapons=Weapon.objects.filter(start=True, hidden=False, default=True)
 			)
 			response = NewUserSerializer(new_user, context={'request': request})
 			return Response(response.data, status=status.HTTP_201_CREATED)
@@ -202,6 +202,7 @@ def temp_user_profile_get(user):
 		"karma": user.profile.karma,
 		"client_settings_json": user.profile.client_settings_json,
 	}
+
 	try:
 		main_character = UserCharacter.objects.get(profile=user.profile, main=True).character.id
 		response['main_character'] = main_character
@@ -216,9 +217,11 @@ def temp_user_profile_get(user):
 	except UserCharacter.DoesNotExist:
 		default_characters_list = [item.id for item in Character.objects.filter(default=True)]
 		response['default_characters_list'] = default_characters_list
+		default_weapon_list = [item.id for item in Weapon.objects.filter(default=True)]
+		response['start_weapons'] = default_weapon_list
 	except UserWeaponConfig.DoesNotExist:
 		default_weapon_list = [item.id for item in Weapon.objects.filter(default=True)]
-		response['default_weapon_list'] = default_weapon_list
+		response['start_weapons'] = default_weapon_list
 	return response
 
 
@@ -642,6 +645,34 @@ class UserConfigView(generics.ListCreateAPIView):
 		if slot:
 			query = query.filter(weapon__weapon_with_addons__weapon__slot=int(slot))
 		return query.order_by(order)
+
+	def post(self, request, *args, **kwargs):
+		character = request.data.get('character', None)
+		weapon = request.data.get('weapon', None)
+		stock = request.data.get('stock', None)
+		barrel = request.data.get('barrel', None)
+		muzzle = request.data.get('muzzle', None)
+		mag = request.data.get('mag', None)
+		grip = request.data.get('grip', None)
+		scope = request.data.get('scope', None)
+
+		try:
+			user_weapon = UserWeapon.objects.get(profile=request.user.profile, weapon_with_addons=WeaponAddons.objects.get(weapon=weapon))
+		except UserWeapon.DoesNotExist:
+			return Response({"detail":"User does not have such weapon"}, status=status.HTTP_400_BAD_REQUEST)
+		else:
+			config, created = UserWeaponConfig.objects.get_or_create(
+				weapon=user_weapon,
+				character=Character.objects.get(pk=character),
+				stock=Stock.objects.get(pk=stock),
+				grip=Grip.objects.get(pk=grip),
+				barrel=Barrel.objects.get(pk=barrel),
+				mag=Mag.objects.get(pk=mag),
+				muzzle=Muzzle.objects.get(pk=muzzle),
+				scope=Scope.objects.get(pk=scope)
+			)
+			response = UserWeaponConfigSerializer(config, context={"request": request})
+			return Response(response.data, status=status.HTTP_202_ACCEPTED)
 
 	def list(self, request, *args, **kwargs):
 		ConfigTuple = namedtuple('ConfigTuple', ('configs',))
