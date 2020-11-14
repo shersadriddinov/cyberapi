@@ -328,6 +328,7 @@ class UserCharacter(models.Model):
 	main = models.BooleanField(verbose_name=_("Main Character"), default=False, blank=True)
 
 	class Meta:
+		unique_together = ('profile', 'character')
 		db_table = "profile_character"
 		verbose_name = _("User & Character")
 		verbose_name_plural = _("Users & Characters")
