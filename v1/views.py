@@ -217,10 +217,10 @@ def temp_user_profile_get(user):
 	except UserCharacter.DoesNotExist:
 		default_characters_list = [item.id for item in Character.objects.filter(default=True)]
 		response['default_characters_list'] = default_characters_list
-		default_weapon_list = [item.id for item in Weapon.objects.filter(default=True)]
+		default_weapon_list = [item.id for item in Weapon.objects.filter(default=True, start=True)]
 		response['start_weapons'] = default_weapon_list
 	except UserWeaponConfig.DoesNotExist:
-		default_weapon_list = [item.id for item in Weapon.objects.filter(default=True)]
+		default_weapon_list = [item.id for item in Weapon.objects.filter(default=True, start=True)]
 		response['start_weapons'] = default_weapon_list
 	return response
 
