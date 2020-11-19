@@ -103,7 +103,7 @@ class UserWeaponAdmin(admin.ModelAdmin):
 	ordering = ("-date_added", )
 	date_hierarchy = "date_added"
 	readonly_fields = ("date_added",)
-	search_fields = ("profile__user__username", "weapon_with_addons")
+	search_fields = ("profile__user__username", "weapon_with_addons__weapon__tech_name")
 	empty_value_display = '-empty-'
 	autocomplete_fields = ("profile", "weapon_with_addons")
 	fieldsets = (
