@@ -72,11 +72,12 @@ class PlayItemAdmin(admin.ModelAdmin):
 
 
 class WeaponAdmin(PlayItemAdmin):
-	list_display = ('id', 'tech_name', 'date_created', "start", 'default', 'hidden')
-	list_editable = ('default', 'hidden', "start")
+	list_display = ('id', 'tech_name', 'date_created', "start", 'slot', 'hidden')
+	list_editable = ('hidden', "start", "slot")
+	list_filter = ('date_created', 'slot', 'hidden')
 	fieldsets = (
 		(None, {
-			'fields': ('tech_name', 'date_created', 'slot', ('default', 'hidden', 'start'))
+			'fields': ('tech_name', 'date_created', 'slot', ('hidden', 'start'))
 		}),
 	)
 
@@ -97,7 +98,7 @@ class UserWeaponConfigInline(admin.TabularInline):
 
 class UserWeaponAdmin(admin.ModelAdmin):
 	inlines = (UserWeaponConfigInline, )
-	list_display = ("id", "__str__", "weapon_with_addons", "date_added", "main")
+	list_display = ("id", "__str__", "weapon_with_addons", "date_added",)
 	list_display_links = ("id", "__str__")
 	list_select_related = True
 	ordering = ("-date_added", )
@@ -108,7 +109,7 @@ class UserWeaponAdmin(admin.ModelAdmin):
 	autocomplete_fields = ("profile", "weapon_with_addons")
 	fieldsets = (
 		(None, {
-			"fields": (("profile", "weapon_with_addons"), "date_added", "main")
+			"fields": (("profile", "weapon_with_addons"), "date_added", )
 		}),
 		("Addons available for this user for this weapon", {
 			"fields": (
@@ -120,8 +121,10 @@ class UserWeaponAdmin(admin.ModelAdmin):
 
 
 class UserWeaponConfigAdmin(admin.ModelAdmin):
-	list_display = ("id", "character", "weapon", "date_created")
+	list_display = ("id", "character", "weapon", "date_created", "slot", "current")
 	list_display_links = ("id", "weapon")
+	list_filter = ("slot", )
+	list_editable = ("current", )
 	list_select_related = True
 	ordering = ("-date_created", )
 	date_hierarchy = "date_created"
