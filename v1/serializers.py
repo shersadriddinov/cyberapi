@@ -116,8 +116,9 @@ class NewUserSerializer(serializers.Serializer):
 	"""
 	user = GeneralUserSerializer()
 	token = TokenSerializer()
-	default_characters = CharacterSerializer(many=True)
-	start_weapons = WeaponSerializer(many=True)
+	start_characters = CharacterSerializer(many=True)
+	start_weapons_first_slot = WeaponSerializer(many=True)
+	start_weapons_second_slot = WeaponSerializer(many=True)
 
 
 class CharacterUnrealSerializer(serializers.Serializer):

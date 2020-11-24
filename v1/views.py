@@ -1,6 +1,7 @@
 from collections import namedtuple
 from django.contrib.auth.models import Group, User
 from django.contrib.auth.hashers import check_password
+from django.db import IntegrityError
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import generics
@@ -17,9 +18,9 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from socket_handler.models import *
 from socket_handler.serializers import *
+from .utils import temp_user_profile_get
 
-
-NewUser = namedtuple('NewUser', ('user', 'token', 'default_characters', "start_weapons"))
+NewUser = namedtuple('NewUser', ('user', 'token', 'start_characters', "start_weapons_first_slot", "start_weapons_second_slot"))
 WeaponAddon = namedtuple('WeaponAddon', ('weapon', 'stock', 'barrel', 'muzzle', 'mag', 'scope', 'grip'))
 
 
@@ -54,17 +55,9 @@ def login(request, ):
 					'id': user.id,
 					'token': token.key,
 				}
-				try:
-					main_character = UserCharacter.objects.get(profile=user.profile, main=True).id
-					response['main_character'] = main_character
-				except UserCharacter.DoesNotExist:
-					main_character = Character.objects.filter(default=True)
-					main_character = [item.id for item in main_character]
-					response['default_characters_list'] = main_character
 				return Response(data=response, status=status.HTTP_200_OK)
 			else:
 				return Response(data={'detail': "Username or password didn't match"}, status=status.HTTP_404_NOT_FOUND)
-
 	else:
 		return Response(data={'detail': "Provide username and password"}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -128,8 +121,9 @@ class Auth(generics.CreateAPIView):
 			new_user = NewUser(
 				user=user,
 				token=token,
-				default_characters=Character.objects.filter(default=True, hidden=False),
-				start_weapons=Weapon.objects.filter(start=True, hidden=False, default=True)
+				start_characters=Character.objects.filter(default=True, hidden=False),
+				start_weapons_first_slot=Weapon.objects.filter(start=True, hidden=False, slot=0),
+				start_weapons_second_slot=Weapon.objects.filter(start=True, hidden=False, slot=1),
 			)
 			response = NewUserSerializer(new_user, context={'request': request})
 			return Response(response.data, status=status.HTTP_201_CREATED)
@@ -149,17 +143,18 @@ def set_default_character(request, pk):
 	:param pk - id of the character
 	:return 200 OK
 	"""
-	try:
-		character = Character.objects.get(pk=pk)
-	except Character.DoesNotExist:
-		return Response(data={"detail": "Character doesn't exists"}, status=status.HTTP_404_NOT_FOUND)
+	character = Character.objects.filter(default=True, pk=pk)
+	if not character:
+		return Response(data={"detail": "Character doesn't exists or its not default"}, status=status.HTTP_404_NOT_FOUND)
 	else:
-		UserCharacter.objects.create(
-			profile=request.user.profile,
-			character=character,
-			main=True
-		)
-		return Response(data={"detail": "Successfully added character to user and settled as its default"}, status=status.HTTP_200_OK)
+		try:
+			UserCharacter.objects.create(
+				profile=request.user.profile,
+				character=character.first(),
+			)
+		except IntegrityError:
+			return Response(data={"detail": "User already has this character"}, status=status.HTTP_400_BAD_REQUEST)
+		return Response(data={"detail": "Successfully added character to user"}, status=status.HTTP_200_OK)
 
 
 @api_view(['PUT', ])
@@ -171,58 +166,18 @@ def set_default_weapon(request, pk):
 	:param pk - id of the weapon
 	:return 200 OK
 	"""
-	try:
-		weapon = Weapon.objects.get(pk=pk)
-	except Weapon.DoesNotExist:
-		return Response(data={"detail": "Weapon doesn't exists"}, status=status.HTTP_404_NOT_FOUND)
+	weapon = Weapon.objects.filter(pk=pk, start=True)
+	if not weapon:
+		return Response(data={"detail": "Weapon is not start weapon or not found"}, status=status.HTTP_404_NOT_FOUND)
 	else:
-		if weapon.start:
-			weapon_addon = WeaponAddons.objects.get(weapon=weapon)
+		if not UserWeapon.objects.filter(profile=request.user.profile, weapon_with_addons__weapon__slot=weapon.first().slot, weapon_with_addons__weapon__start=True):
 			UserWeapon.objects.create(
 				profile=request.user.profile,
-				weapon_with_addons=weapon_addon,
-				main=True
+				weapon_with_addons=WeaponAddons.objects.get(weapon=weapon.first()),
 			)
-			response = {"detail": "Successfully added weapon to user"}
-			response_status = status.HTTP_200_OK
+			return Response(data={"detail": "Successfully added weapon to user"}, status=status.HTTP_200_OK)
 		else:
-			response = {"detail": "Weapon is not start weapon"}
-			response_status = status.HTTP_400_BAD_REQUEST
-		return Response(data=response, status=response_status)
-
-
-def temp_user_profile_get(user):
-	response = {
-		"id": user.id,
-		"username": user.username,
-		"first_name": user.first_name,
-		"email": user.email,
-		"balance": user.profile.balance,
-		"donate": user.profile.donate,
-		"karma": user.profile.karma,
-		"client_settings_json": user.profile.client_settings_json,
-	}
-
-	try:
-		main_character = UserCharacter.objects.get(profile=user.profile, main=True).character.id
-		response['main_character'] = main_character
-		user_config = UserWeaponConfig.objects.get(character=main_character, weapon__profile=user.profile)
-		response['weapon'] = user_config.weapon.weapon_with_addons.weapon.id
-		response['stock'] = user_config.stock.id
-		response['barrel'] = user_config.barrel.id
-		response['muzzle'] = user_config.muzzle.id
-		response['mag'] = user_config.mag.id
-		response['scope'] = user_config.scope.id
-		response['grip'] = user_config.grip.id
-	except UserCharacter.DoesNotExist:
-		default_characters_list = [item.id for item in Character.objects.filter(default=True)]
-		response['default_characters_list'] = default_characters_list
-		default_weapon_list = [item.id for item in Weapon.objects.filter(default=True, start=True)]
-		response['start_weapons'] = default_weapon_list
-	except UserWeaponConfig.DoesNotExist:
-		default_weapon_list = [item.id for item in Weapon.objects.filter(default=True, start=True)]
-		response['start_weapons'] = default_weapon_list
-	return response
+			return Response(data={"detail": "Slot not empty"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserProfile(generics.RetrieveUpdateDestroyAPIView):
@@ -259,7 +214,6 @@ class UserProfile(generics.RetrieveUpdateDestroyAPIView):
 			email = request.data.get('email', False)
 			client_settings_json = request.data.get('client_settings_json', False)
 			password = request.data.get('password', False)
-			main = int(request.data.get("main_character", False))
 
 			user.username = username if username else user.username
 			user.first_name = first_name if first_name else user.first_name
@@ -268,14 +222,6 @@ class UserProfile(generics.RetrieveUpdateDestroyAPIView):
 			if password:
 				user.set_password(password)
 			user.save()
-			if main:
-				try:
-					user_character = UserCharacter.objects.get(id=main)
-					user_character.main = True
-					user_character.save()
-				except UserCharacter.DoesNotExist:
-					return Response(data={"detail": "No such user weapon"}, status=status.HTTP_404_NOT_FOUND)
-
 			response = temp_user_profile_get(user)
 			return Response(data=response, status=status.HTTP_200_OK)
 		else:
@@ -432,7 +378,7 @@ class WeaponListView(generics.ListAPIView):
 		order = self.request.query_params.get('order', '-date_created')
 
 		if self.request.user and user_only == "1":
-			user_weapon = UserWeapon.objects.filter(profile=self.request.user.profile).values_list('weapon_with_addons', flat=True)
+			user_weapon = UserWeapon.objects.filter(profile=self.request.user.profile).values_list('weapon_with_addons__weapon', flat=True)
 			query = Weapon.objects.filter(pk__in=user_weapon, hidden=False)
 		else:
 			query = Weapon.objects.filter(hidden=False)

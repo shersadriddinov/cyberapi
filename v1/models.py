@@ -325,7 +325,6 @@ class UserCharacter(models.Model):
 	profile = models.ForeignKey(Profile, on_delete=models.CASCADE, verbose_name=_("User"))
 	character = models.ForeignKey(Character, on_delete=models.CASCADE, verbose_name=_("Character"))
 	date_added = models.DateTimeField(verbose_name=_("Date Added"), default=timezone.now)
-	main = models.BooleanField(verbose_name=_("Main Character"), default=False, blank=True)
 
 	class Meta:
 		unique_together = ('profile', 'character')
@@ -403,7 +402,6 @@ class UserWeapon(models.Model):
 	profile = models.ForeignKey(Profile, on_delete=models.CASCADE, verbose_name=_("User"))
 	weapon_with_addons = models.ForeignKey(WeaponAddons, on_delete=models.CASCADE, verbose_name=_("Weapon with Addons"))
 	date_added = models.DateTimeField(verbose_name=_("Date Added"), default=timezone.now)
-	main = models.BooleanField(verbose_name=_("Main Weapon"), default=False, blank=True)
 	user_addon_stock = ArrayField(
 		models.PositiveIntegerField(blank=True),
 		default=list,
@@ -462,14 +460,27 @@ class UserWeapon(models.Model):
 	def __str__(self):
 		return self.profile.user.username + " with " + self.weapon_with_addons.weapon.tech_name
 
+	def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+		if not self.pk:
+			self.user_addon_stock = list(self.weapon_with_addons.stock.filter(default=True, hidden=False).values_list('id', flat=True))
+			self.user_addon_barrel = list(self.weapon_with_addons.barrel.filter(default=True, hidden=False).values_list('id', flat=True))
+			self.user_addon_muzzle = list(self.weapon_with_addons.muzzle.filter(default=True, hidden=False).values_list('id', flat=True))
+			self.user_addon_mag = list(self.weapon_with_addons.mag.filter(default=True, hidden=False).values_list('id', flat=True))
+			self.user_addon_scope = list(self.weapon_with_addons.scope.filter(default=True, hidden=False).values_list('id', flat=True))
+			self.user_addon_grip = list(self.weapon_with_addons.grip.filter(default=True, hidden=False).values_list('id', flat=True))
+		super(UserWeapon, self).save(force_insert, force_update, using, update_fields)
+
 
 class UserWeaponConfig(models.Model):
 	"""
 	Many to Many model for :model:`UserWeapon` and to addons. Represents User's Weapon with its addons combinations
 	defined by user
 	"""
-	weapon = models.ForeignKey(UserWeapon, on_delete=models.CASCADE, verbose_name=_("User Weapon"), )
+	profile = models.ForeignKey(Profile, on_delete=models.CASCADE, verbose_name=_("User Profile"), null=False, blank=False)
+	weapon = models.ForeignKey(UserWeapon, on_delete=models.CASCADE, verbose_name=_("User Weapon"), null=True, blank=True)
 	character = models.ForeignKey(Character, on_delete=models.CASCADE, verbose_name=_("User Character"), null=True, blank=True)
+	slot = models.PositiveSmallIntegerField(verbose_name=_("Slot"), choices=SLOTS, default=0, blank=False)
+	current = models.BooleanField(verbose_name=_("Current Config for its slot"), default=False)
 	date_created = models.DateTimeField(verbose_name=_("Date Created"), default=timezone.now)
 	stock = models.ForeignKey(Stock, on_delete=models.SET_NULL, verbose_name=_("Stock"), null=True)
 	barrel = models.ForeignKey(Barrel, on_delete=models.SET_NULL, verbose_name=_("Barrel"), null=True)
@@ -489,19 +500,25 @@ class UserWeaponConfig(models.Model):
 
 	def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
 		# Check if character and weapon addons are present in User Inventory
-		try:
-			UserCharacter.objects.get(profile=self.weapon.profile, character=self.character)
-		except UserCharacter.DoesNotExist:
-			return False
+		flag = True
+		if not UserCharacter.objects.filter(profile=self.profile, character=self.character):
+			flag = False
+		elif self.weapon not in UserWeapon.objects.filter(profile=self.profile):
+			flag = False
+		elif self.stock is not None and self.stock.pk not in self.weapon.user_addon_stock:
+			flag = False
+		elif self.barrel is not None and self.barrel.pk not in self.weapon.user_addon_barrel:
+			flag = False
+		elif self.muzzle is not None and self.muzzle.pk not in self.weapon.user_addon_muzzle:
+			flag = False
+		elif self.mag is not None and self.mag.pk not in self.weapon.user_addon_mag:
+			flag = False
+		elif self.scope is not None and self.scope.pk not in self.weapon.user_addon_scope:
+			flag = False
+		elif self.grip is not None and self.grip.pk not in self.weapon.user_addon_grip:
+			flag = False
+
+		if flag:
+			super(UserWeaponConfig, self).save(force_insert, force_update, using, update_fields)
 		else:
-			if (
-					self.stock.pk in self.weapon.user_addon_stock and
-					self.barrel.pk in self.weapon.user_addon_barrel and
-					self.muzzle.pk in self.weapon.user_addon_muzzle and
-					self.mag.pk in self.weapon.user_addon_mag and
-					self.scope.pk in self.weapon.user_addon_scope and
-					self.grip.pk in self.weapon.user_addon_grip
-			):
-				super(UserWeaponConfig, self).save(force_insert, force_update, using, update_fields)
-			else:
-				return False
+			raise Exception("Could not save weapon config, some error accrued")
