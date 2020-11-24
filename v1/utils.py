@@ -39,8 +39,8 @@ def temp_user_profile_get(user):
 		"is_staff": user.is_staff,
 	}
 
-	user_config_slot1 = UserWeaponConfig.objects.filter(profile=user.profile, current=True, slot=0)
-	user_config_slot2 = UserWeaponConfig.objects.filter(profile=user.profile, current=True, slot=1)
+	user_config_slot1 = UserWeaponConfig.objects.filter(profile=user.profile, current=True, slot=0).first()
+	user_config_slot2 = UserWeaponConfig.objects.filter(profile=user.profile, current=True, slot=1).first()
 
 	if user_config_slot1:
 		response['main_character'] = {
@@ -49,8 +49,57 @@ def temp_user_profile_get(user):
 		}
 		response['weapon_first_slot'] = {
 			"id": user_config_slot1.weapon.weapon_with_addons.weapon.id,
-			"tech_name": user_config_slot1.weapon.weapon_with_addons.weapon.tech_name
+			"tech_name": user_config_slot1.weapon.weapon_with_addons.weapon.tech_name,
 		}
+
+		if user_config_slot1.stock:
+			response['weapon_first_slot']['stock'] = {
+				"id": user_config_slot1.stock.id,
+				"tech_name": user_config_slot1.stock.tech_name
+			}
+		else:
+			response['weapon_first_slot']['stock'] = None
+
+		if user_config_slot1.barrel:
+			response['weapon_first_slot']['barrel'] = {
+				"id": user_config_slot1.barrel.id,
+				"tech_name": user_config_slot1.barrel.tech_name
+			}
+		else:
+			response['weapon_first_slot']['barrel'] = None
+
+		if user_config_slot1.muzzle:
+			response['weapon_first_slot']['muzzle'] = {
+				"id": user_config_slot1.muzzle.id,
+				"tech_name": user_config_slot1.muzzle.tech_name
+			}
+		else:
+			response['weapon_first_slot']['muzzle'] = None
+
+		if user_config_slot1.mag:
+			response['weapon_first_slot']['mag'] = {
+				"id": user_config_slot1.mag.id,
+				"tech_name": user_config_slot1.mag.tech_name
+			}
+		else:
+			response['weapon_first_slot']['mag'] = None
+
+		if user_config_slot1.scope:
+			response['weapon_first_slot']['scope'] = {
+				"id": user_config_slot1.scope.id,
+				"tech_name": user_config_slot1.scope.tech_name
+			}
+		else:
+			response['weapon_first_slot']['scope'] = None
+
+		if user_config_slot1.grip:
+			response['weapon_first_slot']['grip'] = {
+				"id": user_config_slot1.grip.id,
+				"tech_name": user_config_slot1.grip.tech_name
+			}
+		else:
+			response['weapon_first_slot']['grip'] = None
+
 	else:
 		start_weapons_first_slot = Weapon.objects.filter(start=True, hidden=False, slot=0)
 		response['start_weapons_first_slot'] = [
@@ -64,8 +113,56 @@ def temp_user_profile_get(user):
 		}
 		response['weapon_second_slot'] = {
 			"id": user_config_slot2.weapon.weapon_with_addons.weapon.id,
-			"tech_name": user_config_slot2.weapon.weapon_with_addons.weapon.tech_name
+			"tech_name": user_config_slot2.weapon.weapon_with_addons.weapon.tech_name,
 		}
+
+		if user_config_slot2.stock:
+			response['weapon_second_slot']['stock'] = {
+				"id": user_config_slot2.stock.id,
+				"tech_name": user_config_slot2.stock.tech_name
+			}
+		else:
+			response['weapon_second_slot']['stock'] = None
+
+		if user_config_slot2.barrel:
+			response['weapon_second_slot']['barrel'] = {
+				"id": user_config_slot2.barrel.id,
+				"tech_name": user_config_slot2.barrel.tech_name
+			}
+		else:
+			response['weapon_second_slot']['barrel'] = None
+
+		if user_config_slot2.muzzle:
+			response['weapon_first_slot']['muzzle'] = {
+				"id": user_config_slot2.muzzle.id,
+				"tech_name": user_config_slot2.muzzle.tech_name
+			}
+		else:
+			response['weapon_second_slot']['muzzle'] = None
+
+		if user_config_slot2.mag:
+			response['weapon_second_slot']['mag'] = {
+				"id": user_config_slot2.mag.id,
+				"tech_name": user_config_slot2.mag.tech_name
+			}
+		else:
+			response['weapon_second_slot']['mag'] = None
+
+		if user_config_slot2.scope:
+			response['weapon_second_slot']['scope'] = {
+				"id": user_config_slot2.scope.id,
+				"tech_name": user_config_slot2.scope.tech_name
+			}
+		else:
+			response['weapon_second_slot']['scope'] = None
+
+		if user_config_slot2.grip:
+			response['weapon_first_slot']['grip'] = {
+				"id": user_config_slot2.grip.id,
+				"tech_name": user_config_slot2.grip.tech_name
+			}
+		else:
+			response['weapon_second_slot']['grip'] = None
 	else:
 		start_weapons_second_slot = Weapon.objects.filter(start=True, hidden=False, slot=1)
 		response['start_weapons_second_slot'] = [

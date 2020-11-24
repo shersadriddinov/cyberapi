@@ -594,6 +594,7 @@ class UserConfigView(generics.ListCreateAPIView):
 
 	def post(self, request, *args, **kwargs):
 		character = request.data.get('character', None)
+		current = request.data.get("current", None)
 		weapon = request.data.get('weapon', None)
 		stock = request.data.get('stock', None)
 		barrel = request.data.get('barrel', None)
@@ -601,14 +602,17 @@ class UserConfigView(generics.ListCreateAPIView):
 		mag = request.data.get('mag', None)
 		grip = request.data.get('grip', None)
 		scope = request.data.get('scope', None)
+		slot = request.data.get("slot", None)
 
 		try:
 			user_weapon = UserWeapon.objects.get(profile=request.user.profile, weapon_with_addons=WeaponAddons.objects.get(weapon=weapon))
 		except UserWeapon.DoesNotExist:
-			return Response({"detail":"User does not have such weapon"}, status=status.HTTP_400_BAD_REQUEST)
+			return Response({"detail": "User does not have such weapon"}, status=status.HTTP_400_BAD_REQUEST)
 		else:
 			config, created = UserWeaponConfig.objects.get_or_create(
+				profile=request.user.profile,
 				weapon=user_weapon,
+				slot=int(slot),
 				character=Character.objects.get(pk=character),
 				stock=Stock.objects.get(pk=stock),
 				grip=Grip.objects.get(pk=grip),
@@ -617,6 +621,9 @@ class UserConfigView(generics.ListCreateAPIView):
 				muzzle=Muzzle.objects.get(pk=muzzle),
 				scope=Scope.objects.get(pk=scope)
 			)
+			if created and current is not None:
+				config.current = current
+				config.save()
 			response = UserWeaponConfigSerializer(config, context={"request": request})
 			return Response(response.data, status=status.HTTP_202_ACCEPTED)
 
@@ -653,6 +660,8 @@ class UserConfigUpdateView(generics.RetrieveUpdateDestroyAPIView):
 		mag = request.data.get('mag', False)
 		grip = request.data.get('grip', False)
 		scope = request.data.get('scope', False)
+		current = request.data.get('current', None)
+		slot = request.data.get('slot', False)
 
 		config.stock = Stock.objects.get(pk=stock) if stock else config.stock
 		config.barrel = Barrel.objects.get(pk=barrel) if barrel else config.barrel
@@ -660,6 +669,9 @@ class UserConfigUpdateView(generics.RetrieveUpdateDestroyAPIView):
 		config.mag = Mag.objects.get(pk=mag) if mag else config.mag
 		config.grip = Grip.objects.get(pk=grip) if grip else config.grip
 		config.scope = Scope.objects.get(pk=scope) if scope else config.scope
+		config.slot = int(slot) if slot else config.slot
+		if current is not None:
+			config.current = current
 
 		result = config.save()
 		if result:
