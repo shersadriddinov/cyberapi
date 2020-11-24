@@ -614,15 +614,15 @@ class UserConfigView(generics.ListCreateAPIView):
 				weapon=user_weapon,
 				slot=int(slot),
 				character=Character.objects.get(pk=character),
-				stock=Stock.objects.get(pk=stock),
-				grip=Grip.objects.get(pk=grip),
-				barrel=Barrel.objects.get(pk=barrel),
-				mag=Mag.objects.get(pk=mag),
-				muzzle=Muzzle.objects.get(pk=muzzle),
-				scope=Scope.objects.get(pk=scope)
 			)
-			if created and current is not None:
-				config.current = current
+			if created:
+				config.stock = Stock.objects.get(pk=stock) if stock else None
+				config.grip = Grip.objects.get(pk=grip) if grip else None
+				config.barrel = Barrel.objects.get(pk=barrel) if barrel else None
+				config.mag = Mag.objects.get(pk=mag) if mag else None
+				config.muzzle = Muzzle.objects.get(pk=muzzle) if muzzle else None
+				config.scope = Scope.objects.get(pk=scope) if scope else None
+				config.current = current if current is not None else False
 				config.save()
 			response = UserWeaponConfigSerializer(config, context={"request": request})
 			return Response(response.data, status=status.HTTP_202_ACCEPTED)
