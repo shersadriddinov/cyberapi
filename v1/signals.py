@@ -54,10 +54,16 @@ def set_new_current(sender, instance, created, **kwargs):
 	Reset old current if new current chosen
 	"""
 	if instance.current:
-		previous = UserWeaponConfig.objects.filter(profile=instance.profile, slot=instance.slot, current=True).exclude(pk=instance.pk)
-		for config in previous:
-			config.current = False
-			config.save()
+		slot = 0 if instance.slot == 1 else 1
+		if instance.character != UserWeaponConfig.objects.filter(profile=instance.profile, slot=slot, current=True).first().character:
+			instance.current = False
+			instance.save()
+			raise Exception("Both current configs should have same character")
+		else:
+			previous = UserWeaponConfig.objects.filter(profile=instance.profile, slot=instance.slot, current=True).exclude(pk=instance.pk)
+			for config in previous:
+				config.current = False
+				config.save()
 
 
 # Old function to add new default weapon to all users
