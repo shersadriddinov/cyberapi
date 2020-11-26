@@ -446,7 +446,6 @@ class WeaponView(generics.RetrieveUpdateDestroyAPIView):
 			mag = request.data.get('mag', False)
 			grip = request.data.get('grip', False)
 			scope = request.data.get('scope', False)
-			main = request.data.get('main', False)
 
 			user_weapon.user_addon_stock.append(stock)
 			user_weapon.user_addon_barrel.append(barrel)
@@ -454,7 +453,6 @@ class WeaponView(generics.RetrieveUpdateDestroyAPIView):
 			user_weapon.user_addon_mag.append(mag)
 			user_weapon.user_addon_grip.append(grip)
 			user_weapon.user_addon_scope.append(scope)
-			user_weapon.main = True if main else False
 
 			user_weapon.save()
 			response = UserWeaponSerializer(user_weapon, context={"request": request})
@@ -602,7 +600,6 @@ class UserConfigView(generics.ListCreateAPIView):
 		mag = request.data.get('mag', None)
 		grip = request.data.get('grip', None)
 		scope = request.data.get('scope', None)
-		slot = request.data.get("slot", None)
 
 		try:
 			user_weapon = UserWeapon.objects.get(profile=request.user.profile, weapon_with_addons=WeaponAddons.objects.get(weapon=weapon))
@@ -612,7 +609,7 @@ class UserConfigView(generics.ListCreateAPIView):
 			config, created = UserWeaponConfig.objects.get_or_create(
 				profile=request.user.profile,
 				weapon=user_weapon,
-				slot=int(slot),
+				slot=user_weapon.weapon_with_addons.weapon.slot,
 				character=Character.objects.get(pk=character),
 			)
 			if created:
