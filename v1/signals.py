@@ -43,7 +43,7 @@ def default_user_config(sender, instance, created, **kwargs):
 		first_slot = UserWeapon.objects.filter(profile=profile, weapon_with_addons__weapon__slot=0, weapon_with_addons__weapon__start=True).first()
 		second_slot = UserWeapon.objects.filter(profile=profile, weapon_with_addons__weapon__slot=1, weapon_with_addons__weapon__start=True).first()
 
-		if character and first_slot and second_slot and (instance == first_slot or instance == second_slot):
+		if character and first_slot and second_slot and (instance.pk == first_slot.pk or instance.pk == second_slot.pk):
 			create_weapon_config(first_slot, 0, profile, character)
 			create_weapon_config(second_slot, 1, profile, character)
 
@@ -54,10 +54,17 @@ def set_new_current(sender, instance, created, **kwargs):
 	Reset old current if new current chosen
 	"""
 	if instance.current:
-		previous = UserWeaponConfig.objects.filter(profile=instance.profile, slot=instance.slot, current=True).exclude(pk=instance.pk)
-		for config in previous:
-			config.current = False
-			config.save()
+		slot = 0 if instance.slot == 1 else 1
+		current_character = UserWeaponConfig.objects.filter(profile=instance.profile, slot=slot, current=True)
+		if len(current_character) > 0 and instance.character != current_character.first().character:
+			instance.current = False
+			instance.save()
+			raise Exception("Both current configs should have same character")
+		else:
+			previous = UserWeaponConfig.objects.filter(profile=instance.profile, slot=instance.slot, current=True).exclude(pk=instance.pk)
+			for config in previous:
+				config.current = False
+				config.save()
 
 
 # Old function to add new default weapon to all users
