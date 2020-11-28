@@ -174,12 +174,12 @@ def temp_user_profile_get(user):
 		user_character = UserCharacter.objects.filter(profile=user.profile)
 		if user_character:
 			response['main_character'] = {
-				"id": user_character.first().character.id,
-				"tech_name": user_character.first().character.tech_name
+				"id": user_character.first().id,
+				"tech_name": user_character.first().tech_name
 			}
 		else:
 			start_characters = Character.objects.filter(default=True, hidden=False)
 			response['start_characters'] = [
-				{"id": item.character.id, "tech_name": item.character.tech_name} for item in start_characters
+				{"id": item.id, "tech_name": item.tech_name} for item in start_characters
 			]
 	return response
