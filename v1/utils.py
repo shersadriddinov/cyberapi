@@ -1,6 +1,23 @@
 from v1.models import *
 
 
+def get_or_make_weapon_config(weapon_dict):
+	if weapon_dict is not None:
+		try:
+			weapon_dict, created = WeaponConfig.objects.get_or_create(
+				weapon=UserWeapon.objects.filter(weapon_with_addons__weapon__pk=weapon_dict['weapon']),
+				stock=Stock.objects.filter(pk=weapon_dict["stock"]).first(),
+				barrel=Barrel.objects.filter(pk=weapon_dict["barrel"]).first(),
+				muzzle=Muzzle.objects.filter(pk=weapon_dict["muzzle"]).first(),
+				mag=Mag.objects.filter(pk=weapon_dict["mag"]).first(),
+				scope=Scope.objects.filter(pk=weapon_dict["scope"]).first(),
+				grip=Grip.objects.filter(pk=weapon_dict["grip"]).first(),
+			)
+		except KeyError:
+			raise Exception("cannot create weapon config")
+	return weapon_dict
+
+
 def create_weapon_config(weapon, slot, profile, character):
 	stock = weapon.user_addon_stock
 	barrel = weapon.user_addon_barrel

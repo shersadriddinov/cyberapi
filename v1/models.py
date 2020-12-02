@@ -471,17 +471,11 @@ class UserWeapon(models.Model):
 		super(UserWeapon, self).save(force_insert, force_update, using, update_fields)
 
 
-class UserWeaponConfig(models.Model):
+class WeaponConfig(models.Model):
 	"""
-	Many to Many model for :model:`UserWeapon` and to addons. Represents User's Weapon with its addons combinations
-	defined by user
+	Many to Many to create user configs for weapons
 	"""
-	profile = models.ForeignKey(Profile, on_delete=models.CASCADE, verbose_name=_("User Profile"), null=False, blank=False)
 	weapon = models.ForeignKey(UserWeapon, on_delete=models.CASCADE, verbose_name=_("User Weapon"), null=True, blank=True)
-	character = models.ForeignKey(Character, on_delete=models.CASCADE, verbose_name=_("User Character"), null=True, blank=True)
-	slot = models.PositiveSmallIntegerField(verbose_name=_("Slot"), choices=SLOTS, default=0, blank=False)
-	current = models.BooleanField(verbose_name=_("Current Config for its slot"), default=False)
-	date_created = models.DateTimeField(verbose_name=_("Date Created"), default=timezone.now)
 	stock = models.ForeignKey(Stock, on_delete=models.SET_NULL, verbose_name=_("Stock"), null=True)
 	barrel = models.ForeignKey(Barrel, on_delete=models.SET_NULL, verbose_name=_("Barrel"), null=True)
 	muzzle = models.ForeignKey(Muzzle, on_delete=models.SET_NULL, verbose_name=_("Muzzle"), null=True)
@@ -490,22 +484,17 @@ class UserWeaponConfig(models.Model):
 	grip = models.ForeignKey(Grip, on_delete=models.SET_NULL, verbose_name=_("Grip"), null=True)
 
 	class Meta:
-		db_table = "profile_weapon_config"
-		verbose_name = _("User Weapons Configuration")
-		verbose_name_plural = _("User Weapons Configuration")
-		ordering = ("-date_created", )
+		db_table = "weapon_config"
+		verbose_name = _("Weapons Configuration")
+		verbose_name_plural = _("Weapons Configurations")
 
 	def __str__(self):
-		return self.weapon.profile.user.username + " config " + str(self.id)
+		return self.weapon.weapon_with_addons.weapon.tech_name
 
 	def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-		# Check if character and weapon addons are present in User Inventory
 		flag = True
-		if not UserCharacter.objects.filter(profile=self.profile, character=self.character):
-			flag = False
-		elif self.weapon not in UserWeapon.objects.filter(profile=self.profile):
-			flag = False
-		elif self.stock is not None and self.stock.pk not in self.weapon.user_addon_stock:
+
+		if self.stock is not None and self.stock.pk not in self.weapon.user_addon_stock:
 			flag = False
 		elif self.barrel is not None and self.barrel.pk not in self.weapon.user_addon_barrel:
 			flag = False
@@ -519,6 +508,43 @@ class UserWeaponConfig(models.Model):
 			flag = False
 
 		if flag:
+			super(WeaponConfig, self).save(force_insert, force_update, using, update_fields)
+		else:
+			return False
+
+
+class UserWeaponConfig(models.Model):
+	"""
+	Many to Many model for :model:`UserWeapon` and to addons. Represents User's Weapon with its addons combinations
+	defined by user
+	"""
+	profile = models.ForeignKey(Profile, on_delete=models.CASCADE, verbose_name=_("User Profile"), null=False, blank=False)
+	character = models.ForeignKey(Character, on_delete=models.CASCADE, verbose_name=_("User Character"), null=True, blank=True)
+	current = models.BooleanField(verbose_name=_("Current Config for its slot"), default=False)
+	date_created = models.DateTimeField(verbose_name=_("Date Created"), default=timezone.now)
+	primary = models.ForeignKey(WeaponConfig, on_delete=models.CASCADE, verbose_name=_("Primary Weapon"), null=True, blank=True, related_name="primary")
+	secondary = models.ForeignKey(WeaponConfig, on_delete=models.CASCADE, verbose_name=_("Secondary Weapon"), null=True, blank=True, related_name="secondary")
+
+	class Meta:
+		db_table = "profile_weapon_config"
+		verbose_name = _("User Weapons Configuration")
+		verbose_name_plural = _("User Weapons Configuration")
+		ordering = ("-date_created", )
+
+	def __str__(self):
+		return self.profile.user.username + " config " + str(self.id)
+
+	def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+		flag = True
+
+		if not UserCharacter.objects.filter(profile=self.profile, character=self.character):
+			flag = False
+		elif self.primary is not None and self.primary != self.primary.weapon.profile:
+			flag = False
+		elif self.secondary is not None and self.profile != self.secondary.weapon.profile:
+			flag = False
+
+		if flag:
 			super(UserWeaponConfig, self).save(force_insert, force_update, using, update_fields)
 		else:
-			raise Exception("Could not save weapon config, some error accrued")
+			return False

@@ -32,55 +32,54 @@ def create_weapon_with_addons(sender, instance, created, **kwargs):
 		WeaponAddons.objects.create(weapon=instance)
 
 
-@receiver(post_save, sender=UserWeapon)
-def default_user_config(sender, instance, created, **kwargs):
-	"""
-	Try to auto create default user config using default start items
-	"""
-	if created:
-		profile = instance.profile
-		character = UserCharacter.objects.filter(profile=profile, character__default=True).first().character
-		first_slot = UserWeapon.objects.filter(profile=profile, weapon_with_addons__weapon__slot=0, weapon_with_addons__weapon__start=True).first()
-		second_slot = UserWeapon.objects.filter(profile=profile, weapon_with_addons__weapon__slot=1, weapon_with_addons__weapon__start=True).first()
-
-		if character and first_slot and second_slot and (instance.pk == first_slot.pk or instance.pk == second_slot.pk):
-			create_weapon_config(first_slot, 0, profile, character)
-			create_weapon_config(second_slot, 1, profile, character)
-
-
-@receiver(post_save, sender=UserWeaponConfig)
-def set_new_current(sender, instance, created, **kwargs):
-	"""
-	Reset old current if new current chosen
-	"""
-	if instance.current:
-		slot = 0 if instance.slot == 1 else 1
-		current_character = UserWeaponConfig.objects.filter(profile=instance.profile, slot=slot, current=True)
-		if len(current_character) > 0 and instance.character != current_character.first().character:
-			instance.current = False
-			instance.save()
-			raise Exception("Both current configs should have same character")
-		else:
-			previous = UserWeaponConfig.objects.filter(profile=instance.profile, slot=instance.slot, current=True).exclude(pk=instance.pk)
-			for config in previous:
-				config.current = False
-				config.save()
-
-
-# Old function to add new default weapon to all users
-# @receiver(post_save, sender=Weapon)
-# def add_default_weapon_for_all(sender, instance, created, **kwargs):
+# @receiver(post_save, sender=UserWeapon)
+# def default_user_config(sender, instance, created, **kwargs):
 # 	"""
-# 	Auto add weapon to all users if weapon is marked as a default
+# 	Try to auto create default user config using default start items
 # 	"""
-# 	if instance.default and not instance.hidden and getattr(instance, 'from_admin_site', False) and not created:
-# 		weapon_with_addons = WeaponAddons.objects.get(weapon=instance)
-# 		users = Profile.objects.all()
-# 		for user in users:
-# 			try:
-# 				UserWeapon.objects.get(profile=user, weapon_with_addons=weapon_with_addons)
-# 			except ObjectDoesNotExist:
-# 				UserWeapon.objects.create(profile=user, weapon_with_addons=weapon_with_addons)
+# 	if created:
+# 		profile = instance.profile
+# 		character = UserCharacter.objects.filter(profile=profile, character__default=True).first().character
+# 		first_slot = UserWeapon.objects.filter(profile=profile, weapon_with_addons__weapon__slot=0, weapon_with_addons__weapon__start=True).first()
+# 		second_slot = UserWeapon.objects.filter(profile=profile, weapon_with_addons__weapon__slot=1, weapon_with_addons__weapon__start=True).first()
+#
+# 		if character and first_slot and second_slot and (instance.pk == first_slot.pk or instance.pk == second_slot.pk):
+# 			create_weapon_config(first_slot, 0, profile, character)
+# 			create_weapon_config(second_slot, 1, profile, character)
+
+
+# @receiver(post_save, sender=UserWeaponConfig)
+# def set_new_current(sender, instance, created, **kwargs):
+# 	"""
+# 	Reset old current if new current chosen
+# 	"""
+# 	if instance.current:
+# 		slot = 0 if instance.slot == 1 else 1
+# 		current_character = UserWeaponConfig.objects.filter(profile=instance.profile, slot=slot, current=True)
+# 		if len(current_character) > 0 and instance.character != current_character.first().character:
+# 			instance.current = False
+# 			instance.save()
+# 			raise Exception("Both current configs should have same character")
+# 		else:
+# 			previous = UserWeaponConfig.objects.filter(profile=instance.profile, slot=instance.slot, current=True).exclude(pk=instance.pk)
+# 			for config in previous:
+# 				config.current = False
+# 				config.save()
+
+
+@receiver(post_save, sender=Weapon)
+def add_secondary_weapon_for_all(sender, instance, created, **kwargs):
+	"""
+	Auto add weapon to all users if weapon is marked as a default
+	"""
+	if instance.slot == 1 and not instance.hidden and getattr(instance, 'from_admin_site', False):
+		weapon_with_addons = WeaponAddons.objects.get(weapon=instance)
+		users = Profile.objects.all()
+		for user in users:
+			try:
+				UserWeapon.objects.get(profile=user, weapon_with_addons=weapon_with_addons)
+			except ObjectDoesNotExist:
+				UserWeapon.objects.create(profile=user, weapon_with_addons=weapon_with_addons)
 
 # Auto create User weapon config, left here for glory days
 # @receiver(post_save, sender=UserWeapon)
@@ -100,19 +99,18 @@ def set_new_current(sender, instance, created, **kwargs):
 # 	# )
 
 
-# Old function to add all new users default function
-# @receiver(post_save, sender=Profile)
-# def add_default_weapons_with_addons_to_new_user(sender, instance, created, **kwargs):
-# 	"""
-# 	Auto add all default weapons for each new :model:`Profile` instance
-# 	"""
-# 	if created:
-# 		default_weapons = WeaponAddons.objects.filter(weapon__default=True, weapon__hidden=False)
-# 		for weapon in default_weapons:
-# 			UserWeapon.objects.create(
-# 				profile=instance,
-# 				weapon_with_addons=weapon,
-# 			)
+@receiver(post_save, sender=Profile)
+def add_secondary_weapon_to_new_user(sender, instance, created, **kwargs):
+	"""
+	Auto add all default weapons for each new :model:`Profile` instance
+	"""
+	if created:
+		default_weapons = WeaponAddons.objects.filter(weapon__hidden=False, weapon__slot=1)
+		for weapon in default_weapons:
+			UserWeapon.objects.create(
+				profile=instance,
+				weapon_with_addons=weapon,
+			)
 
 
 # Old function to make single main character
