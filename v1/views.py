@@ -18,7 +18,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from socket_handler.models import *
 from socket_handler.serializers import *
-from .utils import temp_user_profile_get, make_weapon_config, get_or_make_weapon_config
+from .utils import temp_user_profile_get, get_or_make_weapon_config
 
 NewUser = namedtuple('NewUser', ('user', 'token', 'start_characters', "start_weapons_first_slot"))
 WeaponAddon = namedtuple('WeaponAddon', ('weapon', 'stock', 'barrel', 'muzzle', 'mag', 'scope', 'grip'))
@@ -604,11 +604,7 @@ class UserConfigView(generics.ListCreateAPIView):
 
 	def get_queryset(self):
 		order = self.request.query_params.get('order', '-date_created')
-		slot = self.request.query_params.get('slot', False)
-		query = UserWeaponConfig.objects.filter(weapon__profile__user=self.request.user)
-		if slot:
-			query = query.filter(weapon__weapon_with_addons__weapon__slot=int(slot))
-		return query.order_by(order)
+		return UserWeaponConfig.objects.filter(profile=self.request.user.profile).order_by(order)
 
 	def post(self, request, *args, **kwargs):
 		profile = request.user.profile
@@ -618,11 +614,12 @@ class UserConfigView(generics.ListCreateAPIView):
 		secondary = request.data.get("secondary", None)
 
 		# Create required config
-		primary = get_or_make_weapon_config(primary)
-		secondary = get_or_make_weapon_config(secondary)
+		primary = get_or_make_weapon_config(primary, profile)
+		secondary = get_or_make_weapon_config(secondary, profile)
 
 		# Check slot of config
-		if primary.weapon.weapon_with_addons.weapon.slot != 0 or secondary.weapon.weapon_with_addons.weapon.slot != 1:
+		if ((primary is not None and primary.weapon.weapon_with_addons.weapon.slot != 0)
+				or (secondary is not None and secondary.weapon.weapon_with_addons.weapon.slot != 1)):
 			return Response({"detail": "Weapon slot did not match"}, status=status.HTTP_400_BAD_REQUEST)
 
 		user_config = UserWeaponConfig.objects.create(
@@ -633,7 +630,7 @@ class UserConfigView(generics.ListCreateAPIView):
 			secondary=secondary
 		)
 
-		response = UserWeaponSerializer(data=user_config, context={"request": request})
+		response = UserWeaponConfigSerializer(user_config, context={"request": request})
 		return Response(response.data, status=status.HTTP_201_CREATED)
 
 	def list(self, request, *args, **kwargs):
@@ -670,8 +667,15 @@ class UserConfigUpdateView(generics.RetrieveUpdateDestroyAPIView):
 
 		config.character = Character.objects.get(pk=character) if character else config.character
 		config.current = current if current is not None else config.current
-		config.primary = get_or_make_weapon_config(primary) if primary else config.primary
-		config.secondary = get_or_make_weapon_config(secondary) if secondary else config.secondary
+		config.primary = get_or_make_weapon_config(primary, config.profile) if primary else config.primary
+		config.secondary = get_or_make_weapon_config(secondary, config.profile) if secondary else config.secondary
+
+		# Check slot of config
+		# Check slot of config
+		if ((config.primary is not None and config.primary.weapon.weapon_with_addons.weapon.slot != 0)
+				or (config.secondary is not None and config.secondary.weapon.weapon_with_addons.weapon.slot != 1)):
+			return Response({"detail": "Weapon slot did not match"}, status=status.HTTP_400_BAD_REQUEST)
+
 		config.save()
-		response = UserWeaponConfigSerializer(data=config, context={"request": request})
+		response = UserWeaponConfigSerializer(config, context={"request": request})
 		return Response(response.data, status=status.HTTP_200_OK)

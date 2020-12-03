@@ -2,7 +2,6 @@ from django.db.models.signals import post_save
 from django.core.exceptions import ObjectDoesNotExist
 from django.dispatch import receiver
 from v1.models import *
-from v1.utils import create_weapon_config
 
 
 @receiver(post_save, sender=User)
@@ -11,7 +10,13 @@ def create_user_profile(sender, instance, created, **kwargs):
 	Auto create :model:`Profile` and Token instances for each new :model:`User` instance
 	"""
 	if created:
-		Profile.objects.create(user=instance)
+		profile = Profile.objects.create(user=instance)
+		default_weapons = WeaponAddons.objects.filter(weapon__hidden=False, weapon__slot=1)
+		for weapon in default_weapons:
+			UserWeapon.objects.create(
+				profile=profile,
+				weapon_with_addons=weapon,
+			)
 		Token.objects.create(user=instance)
 
 
@@ -48,23 +53,16 @@ def create_weapon_with_addons(sender, instance, created, **kwargs):
 # 			create_weapon_config(second_slot, 1, profile, character)
 
 
-# @receiver(post_save, sender=UserWeaponConfig)
-# def set_new_current(sender, instance, created, **kwargs):
-# 	"""
-# 	Reset old current if new current chosen
-# 	"""
-# 	if instance.current:
-# 		slot = 0 if instance.slot == 1 else 1
-# 		current_character = UserWeaponConfig.objects.filter(profile=instance.profile, slot=slot, current=True)
-# 		if len(current_character) > 0 and instance.character != current_character.first().character:
-# 			instance.current = False
-# 			instance.save()
-# 			raise Exception("Both current configs should have same character")
-# 		else:
-# 			previous = UserWeaponConfig.objects.filter(profile=instance.profile, slot=instance.slot, current=True).exclude(pk=instance.pk)
-# 			for config in previous:
-# 				config.current = False
-# 				config.save()
+@receiver(post_save, sender=UserWeaponConfig)
+def set_new_current(sender, instance, created, **kwargs):
+	"""
+	Reset old current if new current chosen
+	"""
+	if instance.current:
+		previous = UserWeaponConfig.objects.filter(profile=instance.profile, current=True).exclude(pk=instance.pk)
+		for config in previous:
+			config.current = False
+			config.save()
 
 
 @receiver(post_save, sender=Weapon)
@@ -99,18 +97,18 @@ def add_secondary_weapon_for_all(sender, instance, created, **kwargs):
 # 	# )
 
 
-@receiver(post_save, sender=Profile)
-def add_secondary_weapon_to_new_user(sender, instance, created, **kwargs):
-	"""
-	Auto add all default weapons for each new :model:`Profile` instance
-	"""
-	if created:
-		default_weapons = WeaponAddons.objects.filter(weapon__hidden=False, weapon__slot=1)
-		for weapon in default_weapons:
-			UserWeapon.objects.create(
-				profile=instance,
-				weapon_with_addons=weapon,
-			)
+# @receiver(post_save, sender=Profile)
+# def add_secondary_weapon_to_new_user(sender, instance, created, **kwargs):
+# 	"""
+# 	Auto add all default weapons for each new :model:`Profile` instance
+# 	"""
+# 	if created:
+# 		default_weapons = WeaponAddons.objects.filter(weapon__hidden=False, weapon__slot=1)
+# 		for weapon in default_weapons:
+# 			UserWeapon.objects.create(
+# 				profile=instance,
+# 				weapon_with_addons=weapon,
+# 			)
 
 
 # Old function to make single main character

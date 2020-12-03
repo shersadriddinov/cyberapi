@@ -475,7 +475,7 @@ class WeaponConfig(models.Model):
 	"""
 	Many to Many to create user configs for weapons
 	"""
-	weapon = models.ForeignKey(UserWeapon, on_delete=models.CASCADE, verbose_name=_("User Weapon"), null=True, blank=True)
+	weapon = models.ForeignKey(UserWeapon, on_delete=models.CASCADE, verbose_name=_("User Weapon"), null=False, blank=False)
 	stock = models.ForeignKey(Stock, on_delete=models.SET_NULL, verbose_name=_("Stock"), null=True)
 	barrel = models.ForeignKey(Barrel, on_delete=models.SET_NULL, verbose_name=_("Barrel"), null=True)
 	muzzle = models.ForeignKey(Muzzle, on_delete=models.SET_NULL, verbose_name=_("Muzzle"), null=True)
@@ -489,7 +489,7 @@ class WeaponConfig(models.Model):
 		verbose_name_plural = _("Weapons Configurations")
 
 	def __str__(self):
-		return self.weapon.weapon_with_addons.weapon.tech_name
+		return self.weapon.profile.user.username + "with config for " + self.weapon.weapon_with_addons.weapon.tech_name
 
 	def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
 		flag = True
@@ -510,7 +510,7 @@ class WeaponConfig(models.Model):
 		if flag:
 			super(WeaponConfig, self).save(force_insert, force_update, using, update_fields)
 		else:
-			return False
+			raise Exception("Trying to add addon that does not belong to user")
 
 
 class UserWeaponConfig(models.Model):
@@ -527,6 +527,7 @@ class UserWeaponConfig(models.Model):
 
 	class Meta:
 		db_table = "profile_weapon_config"
+		unique_together = ('character', 'profile', 'primary', 'secondary')
 		verbose_name = _("User Weapons Configuration")
 		verbose_name_plural = _("User Weapons Configuration")
 		ordering = ("-date_created", )
@@ -539,7 +540,7 @@ class UserWeaponConfig(models.Model):
 
 		if not UserCharacter.objects.filter(profile=self.profile, character=self.character):
 			flag = False
-		elif self.primary is not None and self.primary != self.primary.weapon.profile:
+		elif self.primary is not None and self.profile != self.primary.weapon.profile:
 			flag = False
 		elif self.secondary is not None and self.profile != self.secondary.weapon.profile:
 			flag = False
@@ -547,4 +548,4 @@ class UserWeaponConfig(models.Model):
 		if flag:
 			super(UserWeaponConfig, self).save(force_insert, force_update, using, update_fields)
 		else:
-			return False
+			raise Exception("Problem with some item in config")

@@ -167,7 +167,8 @@ class UserWeaponConfigSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = UserWeaponConfig
-		fields = "__all__"
+		fields = ("id", "current", "date_created", "character", "primary", "secondary")
+		depth = 1
 
 
 class UserWeaponConfigUnrealSerializer(serializers.Serializer):
