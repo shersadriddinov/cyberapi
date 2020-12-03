@@ -18,9 +18,9 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from socket_handler.models import *
 from socket_handler.serializers import *
-from .utils import temp_user_profile_get
+from .utils import temp_user_profile_get, get_or_make_weapon_config
 
-NewUser = namedtuple('NewUser', ('user', 'token', 'start_characters', "start_weapons_first_slot", "start_weapons_second_slot"))
+NewUser = namedtuple('NewUser', ('user', 'token', 'start_characters', "start_weapons_first_slot"))
 WeaponAddon = namedtuple('WeaponAddon', ('weapon', 'stock', 'barrel', 'muzzle', 'mag', 'scope', 'grip'))
 
 
@@ -122,8 +122,7 @@ class Auth(generics.CreateAPIView):
 				user=user,
 				token=token,
 				start_characters=Character.objects.filter(default=True, hidden=False),
-				start_weapons_first_slot=Weapon.objects.filter(start=True, hidden=False, slot=0),
-				start_weapons_second_slot=Weapon.objects.filter(start=True, hidden=False, slot=1),
+				start_weapons_first_slot=Weapon.objects.filter(start=True, hidden=False, slot=0)
 			)
 			response = NewUserSerializer(new_user, context={'request': request})
 			return Response(response.data, status=status.HTTP_201_CREATED)
@@ -154,7 +153,16 @@ def set_default_character(request, pk):
 			)
 		except IntegrityError:
 			return Response(data={"detail": "User already has this character"}, status=status.HTTP_400_BAD_REQUEST)
-		return Response(data={"detail": "Successfully added character to user"}, status=status.HTTP_200_OK)
+		else:
+			result = UserWeaponConfig.objects.create(
+				profile=request.user.profile,
+				character=character.first(),
+				current=True
+			)
+			if result:
+				return Response(data={"detail": "Successfully added character to user"}, status=status.HTTP_200_OK)
+			else:
+				return Response(data={"detail": "Successfully added character to user, but config not created"}, status=status.HTTP_200_OK)
 
 
 @api_view(['PUT', ])
@@ -166,15 +174,27 @@ def set_default_weapon(request, pk):
 	:param pk - id of the weapon
 	:return 200 OK
 	"""
-	weapon = Weapon.objects.filter(pk=pk, start=True)
+	weapon = Weapon.objects.filter(pk=pk, start=True, slot=0)
 	if not weapon:
-		return Response(data={"detail": "Weapon is not start weapon or not found"}, status=status.HTTP_404_NOT_FOUND)
+		return Response(data={"detail": "Weapon is not start weapon or not found, or slot is not primary (0)"}, status=status.HTTP_404_NOT_FOUND)
 	else:
 		if not UserWeapon.objects.filter(profile=request.user.profile, weapon_with_addons__weapon__slot=weapon.first().slot, weapon_with_addons__weapon__start=True):
-			UserWeapon.objects.create(
+			weapon = UserWeapon.objects.create(
 				profile=request.user.profile,
 				weapon_with_addons=WeaponAddons.objects.get(weapon=weapon.first()),
 			)
+			config = WeaponConfig.objects.create(
+				weapon=weapon,
+				stock=Stock.objects.get(pk=weapon.user_addon_stock[0]),
+				barrel=Barrel.objects.get(pk=weapon.user_addon_barrel[0]),
+				muzzle=Muzzle.objects.get(pk=weapon.user_addon_muzzle[0]),
+				mag=Mag.objects.get(pk=weapon.user_addon_mag[0]),
+				grip=Grip.objects.get(pk=weapon.user_addon_grip[0]),
+				scope=Scope.objects.get(pk=weapon.user_addon_scope[0])
+			)
+			user_config = UserWeaponConfig.objects.filter(profile=request.user.profile, character__default=True).first()
+			user_config.primary = config
+			user_config.save()
 			return Response(data={"detail": "Successfully added weapon to user"}, status=status.HTTP_200_OK)
 		else:
 			return Response(data={"detail": "Slot not empty"}, status=status.HTTP_400_BAD_REQUEST)
@@ -584,45 +604,34 @@ class UserConfigView(generics.ListCreateAPIView):
 
 	def get_queryset(self):
 		order = self.request.query_params.get('order', '-date_created')
-		slot = self.request.query_params.get('slot', False)
-		query = UserWeaponConfig.objects.filter(weapon__profile__user=self.request.user)
-		if slot:
-			query = query.filter(weapon__weapon_with_addons__weapon__slot=int(slot))
-		return query.order_by(order)
+		return UserWeaponConfig.objects.filter(profile=self.request.user.profile).order_by(order)
 
 	def post(self, request, *args, **kwargs):
+		profile = request.user.profile
 		character = request.data.get('character', None)
 		current = request.data.get("current", None)
-		weapon = request.data.get('weapon', None)
-		stock = request.data.get('stock', None)
-		barrel = request.data.get('barrel', None)
-		muzzle = request.data.get('muzzle', None)
-		mag = request.data.get('mag', None)
-		grip = request.data.get('grip', None)
-		scope = request.data.get('scope', None)
+		primary = request.data.get("primary", None)
+		secondary = request.data.get("secondary", None)
 
-		try:
-			user_weapon = UserWeapon.objects.get(profile=request.user.profile, weapon_with_addons=WeaponAddons.objects.get(weapon=weapon))
-		except UserWeapon.DoesNotExist:
-			return Response({"detail": "User does not have such weapon"}, status=status.HTTP_400_BAD_REQUEST)
-		else:
-			config, created = UserWeaponConfig.objects.get_or_create(
-				profile=request.user.profile,
-				weapon=user_weapon,
-				slot=user_weapon.weapon_with_addons.weapon.slot,
-				character=Character.objects.get(pk=character),
-			)
-			if created:
-				config.stock = Stock.objects.get(pk=stock) if stock else None
-				config.grip = Grip.objects.get(pk=grip) if grip else None
-				config.barrel = Barrel.objects.get(pk=barrel) if barrel else None
-				config.mag = Mag.objects.get(pk=mag) if mag else None
-				config.muzzle = Muzzle.objects.get(pk=muzzle) if muzzle else None
-				config.scope = Scope.objects.get(pk=scope) if scope else None
-				config.current = current if current is not None else False
-				config.save()
-			response = UserWeaponConfigSerializer(config, context={"request": request})
-			return Response(response.data, status=status.HTTP_202_ACCEPTED)
+		# Create required config
+		primary = get_or_make_weapon_config(primary, profile)
+		secondary = get_or_make_weapon_config(secondary, profile)
+
+		# Check slot of config
+		if ((primary is not None and primary.weapon.weapon_with_addons.weapon.slot != 0)
+				or (secondary is not None and secondary.weapon.weapon_with_addons.weapon.slot != 1)):
+			return Response({"detail": "Weapon slot did not match"}, status=status.HTTP_400_BAD_REQUEST)
+
+		user_config = UserWeaponConfig.objects.create(
+			profile=profile,
+			character=Character.objects.filter(pk=character).first(),
+			current=current,
+			primary=primary,
+			secondary=secondary
+		)
+
+		response = UserWeaponConfigSerializer(user_config, context={"request": request})
+		return Response(response.data, status=status.HTTP_201_CREATED)
 
 	def list(self, request, *args, **kwargs):
 		ConfigTuple = namedtuple('ConfigTuple', ('configs',))
@@ -651,30 +660,22 @@ class UserConfigUpdateView(generics.RetrieveUpdateDestroyAPIView):
 
 	def update(self, request, *args, **kwargs):
 		config = self.get_object()
-		stock = request.data.get('stock', False)
-		barrel = request.data.get('barrel', False)
-		muzzle = request.data.get('muzzle', False)
-		mag = request.data.get('mag', False)
-		grip = request.data.get('grip', False)
-		scope = request.data.get('scope', False)
-		current = request.data.get('current', None)
-		slot = request.data.get('slot', False)
+		character = request.data.get("character", None)
+		current = request.data.get("current", None)
+		primary = request.data.get("primary", None)
+		secondary = request.data.get("secondary", None)
 
-		config.stock = Stock.objects.get(pk=stock) if stock else config.stock
-		config.barrel = Barrel.objects.get(pk=barrel) if barrel else config.barrel
-		config.muzzle = Muzzle.objects.get(pk=muzzle) if muzzle else config.muzzle
-		config.mag = Mag.objects.get(pk=mag) if mag else config.mag
-		config.grip = Grip.objects.get(pk=grip) if grip else config.grip
-		config.scope = Scope.objects.get(pk=scope) if scope else config.scope
-		config.slot = int(slot) if slot else config.slot
-		if current is not None:
-			config.current = current
+		config.character = Character.objects.get(pk=character) if character else config.character
+		config.current = current if current is not None else config.current
+		config.primary = get_or_make_weapon_config(primary, config.profile) if primary else config.primary
+		config.secondary = get_or_make_weapon_config(secondary, config.profile) if secondary else config.secondary
 
-		result = config.save()
-		if result:
-			response = UserWeaponConfigSerializer(config, context={"request": request})
-			return Response(response.data, status=status.HTTP_202_ACCEPTED)
-		else:
-			response = {"detail": "User does not have such addon"}
-		return Response(response, status=status.HTTP_400_BAD_REQUEST)
+		# Check slot of config
+		# Check slot of config
+		if ((config.primary is not None and config.primary.weapon.weapon_with_addons.weapon.slot != 0)
+				or (config.secondary is not None and config.secondary.weapon.weapon_with_addons.weapon.slot != 1)):
+			return Response({"detail": "Weapon slot did not match"}, status=status.HTTP_400_BAD_REQUEST)
 
+		config.save()
+		response = UserWeaponConfigSerializer(config, context={"request": request})
+		return Response(response.data, status=status.HTTP_200_OK)

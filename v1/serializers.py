@@ -118,7 +118,6 @@ class NewUserSerializer(serializers.Serializer):
 	token = TokenSerializer()
 	start_characters = CharacterSerializer(many=True)
 	start_weapons_first_slot = WeaponSerializer(many=True)
-	start_weapons_second_slot = WeaponSerializer(many=True)
 
 
 class CharacterUnrealSerializer(serializers.Serializer):
@@ -151,6 +150,16 @@ class WeaponAddonSerializer(serializers.Serializer):
 	grip = AddonSerializer(many=True)
 
 
+class WeaponConfigSerializer(serializers.ModelSerializer):
+	"""
+
+	"""
+
+	class Meta:
+		model = WeaponConfig
+		fields = "__all__"
+
+
 class UserWeaponConfigSerializer(serializers.ModelSerializer):
 	"""
 
@@ -158,7 +167,8 @@ class UserWeaponConfigSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = UserWeaponConfig
-		fields = "__all__"
+		fields = ("id", "current", "date_created", "character", "primary", "secondary")
+		depth = 1
 
 
 class UserWeaponConfigUnrealSerializer(serializers.Serializer):

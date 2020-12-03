@@ -92,7 +92,7 @@ class WeaponAddonsAdmin(admin.ModelAdmin):
 
 
 class UserWeaponConfigInline(admin.TabularInline):
-	model = UserWeaponConfig
+	model = WeaponConfig
 	extra = 0
 
 
@@ -121,15 +121,14 @@ class UserWeaponAdmin(admin.ModelAdmin):
 
 
 class UserWeaponConfigAdmin(admin.ModelAdmin):
-	list_display = ("id", "character", "weapon", "date_created", "slot", "current")
-	list_display_links = ("id", "weapon")
-	list_filter = ("slot", )
+	list_display = ("id", "profile", "character", "primary", "secondary", "date_created", "current")
+	list_display_links = ("id",)
 	list_editable = ("current", )
 	list_select_related = True
 	ordering = ("-date_created", )
 	date_hierarchy = "date_created"
 	readonly_fields = ("date_created",)
-	search_fields = ("weapon", "character")
+	search_fields = ("profile", "character__tech_name", "primary__weapon__weapon_with_addons__weapon__tech_name")
 	empty_value_display = '-empty-'
 
 
