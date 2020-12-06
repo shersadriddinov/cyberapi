@@ -1,7 +1,15 @@
 from v1.models import *
 
 
+def convert_zero_to_none(weapon_dict):
+	for value in weapon_dict.values():
+		if value == 0:
+			value = None
+	return weapon_dict
+
+
 def get_or_make_weapon_config(weapon_dict, profile):
+	convert_zero_to_none(weapon_dict)
 	if weapon_dict is not None:
 		try:
 			weapon_conf = WeaponConfig.objects.get(
