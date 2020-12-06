@@ -460,6 +460,7 @@ class UserWeapon(models.Model):
 	def __str__(self):
 		return self.profile.user.username + " with " + self.weapon_with_addons.weapon.tech_name
 
+
 	def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
 		if not self.pk:
 			self.user_addon_stock = list(self.weapon_with_addons.stock.filter(default=True, hidden=False).values_list('id', flat=True))

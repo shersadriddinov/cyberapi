@@ -437,7 +437,7 @@ class WeaponView(generics.RetrieveUpdateDestroyAPIView):
 		if request.user and user_only == "1":
 			profile = Profile.objects.get(user=request.user)
 			user_weapon = UserWeapon.objects.get(profile=profile, weapon_with_addons=weapon_with_addons)
-			response = UserWeaponSerializer(user_weapon, context={"request": request})
+			response = UserWeaponSerializer(user_weapon, context={"request": request, "weapon": user_weapon.weapon_with_addons.weapon})
 		else:
 			serializer = WeaponAddon(
 				weapon=weapon,
