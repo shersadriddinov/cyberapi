@@ -44,15 +44,29 @@ class UserCharacterSerializer(serializers.ModelSerializer):
 		fields = ("id", "profile", "character", "date_added", "main")
 
 
-class UserWeaponSerializer(serializers.ModelSerializer):
+class WeaponSerializer(serializers.ModelSerializer):
 	"""
 
 	"""
 
 	class Meta:
+		model = Weapon
+		fields = ("id", "tech_name", "default", "slot")
+
+
+class UserWeaponSerializer(serializers.ModelSerializer):
+	"""
+
+	"""
+	weapon = serializers.SerializerMethodField('weapon')
+
+	def weapon(self, obj):
+		return obj.weapon_with_addons.weapon == "weapon"
+
+	class Meta:
 		model = UserWeapon
 		fields = (
-			"id", "profile", "weapon_with_addons",
+			"id", "profile", "weapon_with_addons", "weapon",
 			"user_addon_stock", "user_addon_barrel", "user_addon_muzzle",
 			"user_addon_mag", "user_addon_scope", "user_addon_grip"
 		)
@@ -98,16 +112,6 @@ class UserListSerializer(serializers.ModelSerializer):
 
 class UserUnrealSerializer(serializers.Serializer):
 	users = UserListSerializer(many=True)
-
-
-class WeaponSerializer(serializers.ModelSerializer):
-	"""
-
-	"""
-
-	class Meta:
-		model = Weapon
-		fields = ("id", "tech_name", "default", "slot")
 
 
 class NewUserSerializer(serializers.Serializer):
