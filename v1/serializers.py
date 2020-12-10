@@ -58,9 +58,9 @@ class UserWeaponSerializer(serializers.ModelSerializer):
 	"""
 
 	"""
-	weapon = serializers.SerializerMethodField('weapon')
+	weapon = serializers.SerializerMethodField('get_weapon')
 
-	def weapon(self, obj):
+	def get_weapon(self, obj):
 		return obj.weapon_with_addons.weapon == "weapon"
 
 	class Meta:
