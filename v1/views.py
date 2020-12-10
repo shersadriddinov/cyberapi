@@ -578,7 +578,7 @@ class UserSearchView(generics.ListAPIView):
 	"""
 	serializer_class = UserListSerializer
 	pagination_class = LimitOffsetPagination
-	permission_classes = [IsAuthenticated, IsValidGameServer]
+	permission_classes = IsAuthenticated
 
 	def get_queryset(self):
 		order = self.request.query_params.get('order', '-date_joined')
