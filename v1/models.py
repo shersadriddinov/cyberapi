@@ -453,6 +453,7 @@ class UserWeapon(models.Model):
 
 	class Meta:
 		db_table = "profile_weapon"
+		unique_together = ("profile", "weapon_with_addons")
 		verbose_name = _("Profile & Weapon")
 		verbose_name_plural = _("Profile & Weapon")
 		ordering = ("-date_added", )
