@@ -179,23 +179,27 @@ def set_default_weapon(request, pk):
 		return Response(data={"detail": "Weapon is not start weapon or not found, or slot is not primary (0)"}, status=status.HTTP_404_NOT_FOUND)
 	else:
 		if not UserWeapon.objects.filter(profile=request.user.profile, weapon_with_addons__weapon__slot=weapon.first().slot, weapon_with_addons__weapon__start=True):
-			weapon = UserWeapon.objects.create(
-				profile=request.user.profile,
-				weapon_with_addons=WeaponAddons.objects.get(weapon=weapon.first()),
-			)
-			config = WeaponConfig.objects.create(
-				weapon=weapon,
-				stock=Stock.objects.get(pk=weapon.user_addon_stock[0]),
-				barrel=Barrel.objects.get(pk=weapon.user_addon_barrel[0]),
-				muzzle=Muzzle.objects.get(pk=weapon.user_addon_muzzle[0]),
-				mag=Mag.objects.get(pk=weapon.user_addon_mag[0]),
-				grip=Grip.objects.get(pk=weapon.user_addon_grip[0]),
-				scope=Scope.objects.get(pk=weapon.user_addon_scope[0])
-			)
-			user_config = UserWeaponConfig.objects.filter(profile=request.user.profile, character__default=True).first()
-			user_config.primary = config
-			user_config.save()
-			return Response(data={"detail": "Successfully added weapon to user"}, status=status.HTTP_200_OK)
+			try:
+				weapon = UserWeapon.objects.create(
+					profile=request.user.profile,
+					weapon_with_addons=WeaponAddons.objects.get(weapon=weapon.first()),
+				)
+			except IntegrityError:
+				return Response(data={"detail": "User already has this weapon"},status=status.HTTP_400_BAD_REQUEST)
+			else:
+				config = WeaponConfig.objects.create(
+					weapon=weapon,
+					stock=Stock.objects.get(pk=weapon.user_addon_stock[0]),
+					barrel=Barrel.objects.get(pk=weapon.user_addon_barrel[0]),
+					muzzle=Muzzle.objects.get(pk=weapon.user_addon_muzzle[0]),
+					mag=Mag.objects.get(pk=weapon.user_addon_mag[0]),
+					grip=Grip.objects.get(pk=weapon.user_addon_grip[0]),
+					scope=Scope.objects.get(pk=weapon.user_addon_scope[0])
+				)
+				user_config = UserWeaponConfig.objects.filter(profile=request.user.profile, character__default=True).first()
+				user_config.primary = config
+				user_config.save()
+				return Response(data={"detail": "Successfully added weapon to user"}, status=status.HTTP_200_OK)
 		else:
 			return Response(data={"detail": "Slot not empty"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -437,7 +441,7 @@ class WeaponView(generics.RetrieveUpdateDestroyAPIView):
 		if request.user and user_only == "1":
 			profile = Profile.objects.get(user=request.user)
 			user_weapon = UserWeapon.objects.get(profile=profile, weapon_with_addons=weapon_with_addons)
-			response = UserWeaponSerializer(user_weapon, context={"request": request, "weapon": user_weapon.weapon_with_addons.weapon})
+			response = UserWeaponSerializer(user_weapon, context={"request": request})
 		else:
 			serializer = WeaponAddon(
 				weapon=weapon,
@@ -512,13 +516,17 @@ def add_weapon_to_user(request, pk):
 		response_status = status.HTTP_400_BAD_REQUEST
 	else:
 		weapon_with_addons = WeaponAddons.objects.get(weapon=weapon)
-		UserWeapon.objects.create(
-			profile=profile,
-			weapon_with_addons=weapon_with_addons,
-		).save()
-		response['detail'] = "Successfully added to user weapons"
-		response_status = status.HTTP_200_OK
-	return Response(data=response, status=response_status)
+		try:
+			UserWeapon.objects.create(
+				profile=profile,
+				weapon_with_addons=weapon_with_addons,
+			).save()
+		except IntegrityError:
+			return Response(data={"detail": "User already has this weapon"}, status=status.HTTP_400_BAD_REQUEST)
+		else:
+			response['detail'] = "Successfully added to user weapons"
+			response_status = status.HTTP_200_OK
+			return Response(data=response, status=response_status)
 
 
 class UsersList(generics.ListAPIView):
