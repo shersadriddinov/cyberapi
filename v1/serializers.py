@@ -158,16 +158,25 @@ class WeaponConfigSerializer(serializers.ModelSerializer):
 	"""
 
 	"""
+	weapon = serializers.SerializerMethodField('get_weapon')
+
+	def get_weapon(self, obj):
+		return obj.weapon.weapon_with_addons.weapon.id
 
 	class Meta:
 		model = WeaponConfig
-		fields = "__all__"
+		fields = (
+			"id", "weapon", "stock", "stock", "barrel",
+			"muzzle", "mag", "scope", "grip"
+		)
 
 
 class UserWeaponConfigSerializer(serializers.ModelSerializer):
 	"""
 
 	"""
+	primary = WeaponConfigSerializer()
+	secondary = WeaponConfigSerializer()
 
 	class Meta:
 		model = UserWeaponConfig

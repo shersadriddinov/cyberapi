@@ -11,9 +11,9 @@ def create_user_profile(sender, instance, created, **kwargs):
 	"""
 	if created:
 		profile = Profile.objects.create(user=instance)
-		default_weapons = WeaponAddons.objects.filter(weapon__hidden=False, weapon__slot=1)
+		default_weapons = WeaponAddons.objects.filter(weapon__hidden=False, weapon__slot=1, weapon__start=True)
 		for weapon in default_weapons:
-			UserWeapon.objects.create(
+			weapon = UserWeapon.objects.create(
 				profile=profile,
 				weapon_with_addons=weapon,
 			)
@@ -70,7 +70,7 @@ def add_secondary_weapon_for_all(sender, instance, created, **kwargs):
 	"""
 	Auto add weapon to all users if weapon is marked as a default
 	"""
-	if instance.slot == 1 and not instance.hidden and getattr(instance, 'from_admin_site', False):
+	if (instance.slot == 1 and instance.start) and not instance.hidden and getattr(instance, 'from_admin_site', False):
 		weapon_with_addons = WeaponAddons.objects.get(weapon=instance)
 		users = Profile.objects.all()
 		for user in users:

@@ -61,10 +61,11 @@ class Notification(models.Model):
 
 SERVER_STATUS = (
 	(0, _("Server not assigned")),
-	(1, _("Waiting for players")),
-	(2, _("Game in process")),
-	(3, _("Game finished")),
-	(4, _("Ready for close"))
+	(1, _("Preparing")),
+	(2, _("Waiting for players")),
+	(3, _("Game in process")),
+	(4, _("Game finished")),
+	(5, _("Ready for close"))
 )
 
 SERVER_TYPE = (
@@ -112,7 +113,7 @@ class Server(models.Model):
 	status = models.PositiveSmallIntegerField(
 		choices=SERVER_STATUS,
 		verbose_name=_("Server current status"),
-		help_text=_("0 - Server not assigned\n1 - Waiting for players\n2 - Game in process\n3 - Game finished\n4 - Ready for close"),
+		help_text=_("0 - Server not assigned\n1 - Preparing\n2 - Waiting for players\n3 - Game in process\n4 - Game finished\n5 - Ready for close"),
 		default=0,
 		blank=False
 	)
