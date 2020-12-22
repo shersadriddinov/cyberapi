@@ -154,10 +154,25 @@ def set_default_character(request, pk):
 		except IntegrityError:
 			return Response(data={"detail": "User already has this character"}, status=status.HTTP_400_BAD_REQUEST)
 		else:
+			weapon = UserWeapon.objects.filter(
+				profile=request.user.profile,
+				weapon_with_addons__weapon__start=True,
+				weapon_with_addons__weapon__slot=1
+			).first()
+			config = WeaponConfig.objects.create(
+				weapon=weapon,
+				stock=Stock.objects.get(pk=weapon.user_addon_stock[0]),
+				barrel=Barrel.objects.get(pk=weapon.user_addon_barrel[0]),
+				muzzle=Muzzle.objects.get(pk=weapon.user_addon_muzzle[0]),
+				mag=Mag.objects.get(pk=weapon.user_addon_mag[0]),
+				grip=Grip.objects.get(pk=weapon.user_addon_grip[0]),
+				scope=Scope.objects.get(pk=weapon.user_addon_scope[0])
+			)
 			result = UserWeaponConfig.objects.create(
 				profile=request.user.profile,
 				character=character.first(),
-				current=True
+				current=True,
+				secondary=config
 			)
 			if result:
 				return Response(data={"detail": "Successfully added character to user"}, status=status.HTTP_200_OK)
@@ -185,7 +200,7 @@ def set_default_weapon(request, pk):
 					weapon_with_addons=WeaponAddons.objects.get(weapon=weapon.first()),
 				)
 			except IntegrityError:
-				return Response(data={"detail": "User already has this weapon"},status=status.HTTP_400_BAD_REQUEST)
+				return Response(data={"detail": "User already has this weapon"}, status=status.HTTP_400_BAD_REQUEST)
 			else:
 				config = WeaponConfig.objects.create(
 					weapon=weapon,
