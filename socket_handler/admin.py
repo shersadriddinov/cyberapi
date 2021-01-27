@@ -72,13 +72,13 @@ class GameStatFactorAdmin(admin.ModelAdmin):
 
 
 class PlayerStatisticAdmin(admin.ModelAdmin):
-	list_display = ("profile", "game", "place", "kill", "death", "damage", "action", "date")
+	list_display = ("user", "game", "place", "kill", "death", "damage", "action", "date")
 	list_display_links = ("game",)
-	list_filter = ("game", "profile", "date")
+	list_filter = ("game", "user", "date")
 	list_select_related = True
 	ordering = ("-date",)
 	date_hierarchy = "date"
-	search_fields = ("profile", "game")
+	search_fields = ("user", "game")
 
 
 admin.site.register(Notification, NotificationAdmin)

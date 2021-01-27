@@ -12,7 +12,7 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 from rest_framework.decorators import api_view, permission_classes
-from django.core.serializers import serialize
+from django.forms.models import model_to_dict
 
 
 class NotificationView(generics.ListAPIView):
@@ -372,7 +372,7 @@ class PlayerStats(generics.ListCreateAPIView):
 	pagination_class = LimitOffsetPagination
 
 	def get_queryset(self):
-		return PlayerStatistic.objects.filter(profile__user=self.request.user)
+		return PlayerStatistic.objects.filter(user=self.request.user)
 
 	def list(self, request, *args, **kwargs):
 		PlayerStatsTuple = namedtuple('PlayerStatsTuple', ('stats',))
@@ -385,18 +385,19 @@ class PlayerStats(generics.ListCreateAPIView):
 
 	def create(self, request, *args, **kwargs):
 		stats = PlayerStatistic.objects.create(
-			profile=Profile.objects.get(user=self.request.data.get("user")),
+			user=User.objects.get(pk=self.request.data.get("user")),
 			game=Server.objects.get(pk=self.request.data.get("server")),
-			place=GameWinPlace.objects.get(place=self.request.data.get("place")),
-			kill=self.request.data.get("kill"),
-			death=self.request.data.get("damage"),
-			damage=self.request.data.get("damage"),
-			action=self.request.data.get("action")
+			place=GameWinPlace.objects.get(place=int(self.request.data.get("place"))),
+			kill=int(self.request.data.get("kill")),
+			death=int(self.request.data.get("death")),
+			damage=int(self.request.data.get("damage")),
+			action=int(self.request.data.get("action"))
 		)
-		response = serialize('json', stats)
-		response['experience'] = stats.profile.experience
-		socket_response = response
-		socket_response['action'] = "stat"
-		send_to_socket(socket_response)
-		return Response(response)
+		response = model_to_dict(stats)
+		response['experience'] = stats.user.profile.experience
+		response['ingame_actions'] = response.pop("action")
+		response['action'] = "stat"
+		response.pop("date")
+		send_to_socket(response)
+		return Response(data=response)
 
