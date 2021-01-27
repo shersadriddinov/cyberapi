@@ -198,3 +198,57 @@ class Invite(models.Model):
 
 	def __str__(self):
 		return str(self.host_user) + "-" + str(self.invited_user) + "-" + str(self.id)
+
+
+class GameWinPlace(models.Model):
+	place = models.PositiveSmallIntegerField(verbose_name=_("Place in Game"), null=False, blank=False)
+	reward = models.PositiveSmallIntegerField(verbose_name=_("Reward for Place"), null=False, blank=False)
+
+	class Meta:
+		verbose_name = _("Points for Game Winning")
+		verbose_name_plural = _("Points for Game Winning")
+
+
+GAME_STAT_METRICS = (
+	(1, "kill"),
+	(2, "death"),
+	(3, "damage"),
+	(4, "action")
+)
+
+
+class GameStatFactor(models.Model):
+	metric = models.PositiveSmallIntegerField(verbose_name=_("Metric"), choices=GAME_STAT_METRICS, null=False, blank=False)
+	factor = models.FloatField(verbose_name=_("Factor"), null=False, blank=False)
+
+	class Meta:
+		verbose_name = _("Factor for Experience Count")
+		verbose_name_plural = _("Factors for Experience Count")
+
+
+class PlayerStatistic(models.Model):
+	profile = models.ForeignKey(Profile, verbose_name=_("Profile"), on_delete=models.CASCADE, null=False, blank=False)
+	game = models.ForeignKey(Server, verbose_name=_("Game"), on_delete=models.SET_NULL, null=True, blank=True)
+	place = models.ForeignKey(GameWinPlace, verbose_name=_("Place"), on_delete=models.CASCADE, null=False, blank=False)
+	kill = models.PositiveSmallIntegerField(verbose_name=_("Kill"), null=False, blank=False, default=0)
+	death = models.PositiveSmallIntegerField(verbose_name=_("Death"), null=False, blank=False, default=0)
+	damage = models.PositiveIntegerField(verbose_name=_("Damage"), null=False, blank=False, default=0)
+	action = models.PositiveSmallIntegerField(verbose_name=_("Actions"), null=False, blank=False, default=0)
+	date = models.DateTimeField(verbose_name=_("Game Date"), default=timezone.now, )
+
+	class Meta:
+		db_table = "stats"
+		verbose_name = _("Player Statistic")
+		verbose_name_plural = _("Players Statistics")
+		ordering = ("date", )
+
+	def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+		factor_kill = GameStatFactor.objects.get(metric=1)
+		factor_death = GameStatFactor.objects.get(metric=2)
+		factor_damage = GameStatFactor.objects.get(metric=3)
+		factor_action = GameStatFactor.objects.get(metric=4)
+		self.profile.experience += (self.kill * factor_kill +
+									self.death * factor_death +
+									self.damage * factor_damage +
+									self.action * factor_action) + GameWinPlace.objects.get(place=self.place).reward
+		super(PlayerStatistic, self).save(force_insert, force_update, using, update_fields)

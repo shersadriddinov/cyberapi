@@ -215,6 +215,7 @@ class Profile(models.Model):
 		help_text=_('Coins earned by playing'),
 		verbose_name=_("Game Balance"),
 	)
+	experience = ...
 	donate = models.PositiveIntegerField(
 		db_column='donat',
 		null=False,

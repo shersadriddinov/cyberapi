@@ -12,6 +12,7 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 from rest_framework.decorators import api_view, permission_classes
+from django.core.serializers import serialize
 
 
 class NotificationView(generics.ListAPIView):
@@ -360,4 +361,42 @@ class InviteView(generics.RetrieveDestroyAPIView):
 			return super().delete(self, request, *args, **kwargs)
 		else:
 			return Response(data={"detail": "Sorry, this invite is not for you"}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class PlayerStats(generics.ListCreateAPIView):
+	"""
+	Create, Get player statistics
+	"""
+	serializer_class = PlayerStatsSerializer
+	permission_classes = (IsUserORValidServer, )
+	pagination_class = LimitOffsetPagination
+
+	def get_queryset(self):
+		return PlayerStatistic.objects.filter(profile__user=self.request.user)
+
+	def list(self, request, *args, **kwargs):
+		PlayerStatsTuple = namedtuple('PlayerStatsTuple', ('stats',))
+		page = self.paginate_queryset(self.get_queryset())
+		if page is not None:
+			response = InviteUnrealSerializer(PlayerStatsTuple(stats=page))
+			return self.get_paginated_response(response.data)
+		response = InviteUnrealSerializer(PlayerStatsTuple(stats=self.get_queryset()))
+		return Response(response.data)
+
+	def create(self, request, *args, **kwargs):
+		stats = PlayerStatistic.objects.create(
+			profile=Profile.objects.get(user=self.request.data.get("user")),
+			game=Server.objects.get(pk=self.request.data.get("server")),
+			place=GameWinPlace.objects.get(place=self.request.data.get("place")),
+			kill=self.request.data.get("kill"),
+			death=self.request.data.get("damage"),
+			damage=self.request.data.get("damage"),
+			action=self.request.data.get("action")
+		)
+		response = serialize('json', stats)
+		response['experience'] = stats.profile.experience
+		socket_response = response
+		socket_response['action'] = "stat"
+		send_to_socket(socket_response)
+		return Response(response)
 

@@ -57,6 +57,33 @@ class InviteAdmin(admin.ModelAdmin):
 	)
 
 
+class GameWinPlaceAdmin(admin.ModelAdmin):
+	list_display = ("place", "reward", )
+	list_display_links = ("place",)
+	list_editable = ("reward", )
+	list_select_related = True
+
+
+class GameStatFactorAdmin(admin.ModelAdmin):
+	list_display = ("metric", "factor",)
+	list_display_links = ("metric",)
+	list_editable = ("factor",)
+	list_select_related = True
+
+
+class PlayerStatisticAdmin(admin.ModelAdmin):
+	list_display = ("profile", "game", "place", "kill", "death", "damage", "action", "date")
+	list_display_links = ("game",)
+	list_filter = ("game", "profile", "date")
+	list_select_related = True
+	ordering = ("-date",)
+	date_hierarchy = "date"
+	search_fields = ("profile", "game")
+
+
 admin.site.register(Notification, NotificationAdmin)
 admin.site.register(Server, ServerAdmin)
 admin.site.register(Invite, InviteAdmin)
+admin.site.register(GameWinPlace, GameWinPlaceAdmin)
+admin.site.register(GameStatFactor, GameStatFactorAdmin)
+admin.site.register(PlayerStatistic, PlayerStatisticAdmin)
