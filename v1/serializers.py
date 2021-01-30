@@ -79,6 +79,15 @@ class GeneralUserSerializer(serializers.ModelSerializer):
 	balance = serializers.IntegerField(source='profile.balance', read_only=True)
 	donate = serializers.IntegerField(source='profile.donate', read_only=True)
 	karma = serializers.IntegerField(source='profile.karma', read_only=True)
+	killed = serializers.IntegerField(source='profile.killed', read_only=True)
+	died = serializers.IntegerField(source='profile.died', read_only=True)
+	damage = serializers.IntegerField(source='profile.damage', read_only=True)
+	actions = serializers.IntegerField(source='profile.actions', read_only=True)
+	place_1 = serializers.IntegerField(source='profile.place_1', read_only=True)
+	place_2 = serializers.IntegerField(source='profile.place_2', read_only=True)
+	place_3 = serializers.IntegerField(source='profile.place_3', read_only=True)
+	place_4 = serializers.IntegerField(source='profile.place_4', read_only=True)
+	experience = serializers.FloatField(source='profile.experience', read_only=True)
 	client_settings_json = serializers.JSONField(source='profile.client_settings_json')
 
 	class Meta:
@@ -86,7 +95,9 @@ class GeneralUserSerializer(serializers.ModelSerializer):
 		fields = (
 			"id", "username", "first_name",
 			"email", "balance", "donate",
-			"karma", "client_settings_json",
+			"karma", "client_settings_json", 'killed',
+			'died', 'damage', 'actions', 'place_1',
+			'place_2', 'place_3', 'place_4', 'experience'
 		)
 		read_only_fields = ("balance", "donate", "karma",)
 

@@ -363,9 +363,9 @@ class InviteView(generics.RetrieveDestroyAPIView):
 			return Response(data={"detail": "Sorry, this invite is not for you"}, status=status.HTTP_401_UNAUTHORIZED)
 
 
-class PlayerStats(generics.ListCreateAPIView):
+class PlayerStats(generics.ListAPIView):
 	"""
-	Create, Get player statistics
+	Get player statistics
 	"""
 	serializer_class = PlayerStatsSerializer
 	permission_classes = (IsUserORValidServer, )
@@ -378,26 +378,28 @@ class PlayerStats(generics.ListCreateAPIView):
 		PlayerStatsTuple = namedtuple('PlayerStatsTuple', ('stats',))
 		page = self.paginate_queryset(self.get_queryset())
 		if page is not None:
-			response = InviteUnrealSerializer(PlayerStatsTuple(stats=page))
+			response = PlayerStatsUnrealSerializer(PlayerStatsTuple(stats=page))
 			return self.get_paginated_response(response.data)
-		response = InviteUnrealSerializer(PlayerStatsTuple(stats=self.get_queryset()))
+		response = PlayerStatsUnrealSerializer(PlayerStatsTuple(stats=self.get_queryset()))
 		return Response(response.data)
 
-	def create(self, request, *args, **kwargs):
-		stats = PlayerStatistic.objects.create(
-			user=User.objects.get(pk=self.request.data.get("user")),
-			game=Server.objects.get(pk=self.request.data.get("server")),
-			place=GameWinPlace.objects.get(place=int(self.request.data.get("place"))),
-			kill=int(self.request.data.get("kill")),
-			death=int(self.request.data.get("death")),
-			damage=int(self.request.data.get("damage")),
-			action=int(self.request.data.get("action"))
-		)
-		response = model_to_dict(stats)
-		response['experience'] = stats.user.profile.experience
-		response['ingame_actions'] = response.pop("action")
-		response['action'] = "stat"
-		response.pop("date")
-		send_to_socket(response)
-		return Response(data=response)
 
+@api_view(["POST"])
+@permission_classes([IsValidGameServer])
+def update_user_stats(request):
+	stats = PlayerStatistic.objects.create(
+		user=User.objects.get(pk=request.data.get("user")),
+		game=Server.objects.get(token=request.data.get("token")),
+		place=GameWinPlace.objects.get(place=int(request.data.get("place"))),
+		kill=int(request.data.get("kill")),
+		death=int(request.data.get("death")),
+		damage=int(request.data.get("damage")),
+		action=int(request.data.get("action"))
+	)
+	response = model_to_dict(stats)
+	response['experience'] = stats.user.profile.experience
+	response['ingame_actions'] = response.pop("action")
+	response['action'] = "stat"
+	response.pop("date")
+	send_to_socket(response)
+	return Response(data=response)

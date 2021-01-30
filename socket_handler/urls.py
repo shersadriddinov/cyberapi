@@ -24,4 +24,5 @@ urlpatterns = [
 
 	# Game Stats
 	path('stats/', views.PlayerStats.as_view()),
+	path('stats/update/', views.update_user_stats)
 ]

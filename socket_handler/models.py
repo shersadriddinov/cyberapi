@@ -248,6 +248,19 @@ class PlayerStatistic(models.Model):
 		factor_death = GameStatFactor.objects.get(metric=2).factor
 		factor_damage = GameStatFactor.objects.get(metric=3).factor
 		factor_action = GameStatFactor.objects.get(metric=4).factor
-		self.user.profile.experience += (self.kill * factor_kill + self.death * factor_death + self.damage * factor_damage + self.action * factor_action) + self.place.reward
+		self.user.profile.experience += self.kill * factor_kill + self.death * factor_death + self.damage * factor_damage + self.action * factor_action
+		self.user.profile.balance += self.place.reward
+		self.user.profile.killed += self.kill
+		self.user.profile.died += self.death
+		self.user.profile.damage += self.damage
+		self.user.profile.actions += self.action
+		if self.place == 1:
+			self.user.profile.place_1 += 1
+		elif self.place == 2:
+			self.user.profile.place_2 += 1
+		elif self.place == 3:
+			self.user.profile.place_3 += 1
+		else:
+			self.user.profile.place_4 += 1
 		self.user.profile.save()
 		super(PlayerStatistic, self).save(force_insert, force_update, using, update_fields)

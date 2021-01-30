@@ -57,8 +57,17 @@ def temp_user_profile_get(user):
 		"balance": user.profile.balance,
 		"donate": user.profile.donate,
 		"karma": user.profile.karma,
+		"killed": user.profile.killed,
+		"died": user.profile.died,
+		"damage": user.profile.damage,
+		"actions": user.profile.actions,
+		"place_1": user.profile.place_1,
+		"place_2": user.profile.place_2,
+		"place_3": user.profile.place_3,
+		"place_4": user.profile.place_4,
+		"experience": user.profile.experience,
 		"client_settings_json": user.profile.client_settings_json,
-		"is_staff": user.is_staff,
+		"is_staff": user.is_staff
 	}
 
 	user_config = UserWeaponConfig.objects.filter(profile=user.profile, current=True).first()
