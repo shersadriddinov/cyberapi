@@ -20,5 +20,9 @@ urlpatterns = [
 
 	# Invites
 	path('invite/list/', views.InviteListView.as_view()),
-	path('invite/<int:pk>/', views.InviteView.as_view())
+	path('invite/<int:pk>/', views.InviteView.as_view()),
+
+	# Game Stats
+	path('stats/', views.PlayerStats.as_view()),
+	path('stats/update/', views.update_user_stats)
 ]

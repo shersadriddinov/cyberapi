@@ -50,3 +50,13 @@ class InviteSerializer(serializers.ModelSerializer):
 
 class InviteUnrealSerializer(serializers.Serializer):
 	invites = InviteSerializer(many=True)
+
+
+class PlayerStatsSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = PlayerStatistic
+		fields = "__all__"
+
+
+class PlayerStatsUnrealSerializer(serializers.Serializer):
+	stats = PlayerStatsSerializer(many=True)

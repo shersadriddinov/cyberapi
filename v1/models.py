@@ -215,6 +215,15 @@ class Profile(models.Model):
 		help_text=_('Coins earned by playing'),
 		verbose_name=_("Game Balance"),
 	)
+	killed = models.PositiveIntegerField(verbose_name=_("Killed"), default=0, null=False, blank=False)
+	died = models.PositiveIntegerField(verbose_name=_("Died"), default=0, null=False, blank=False)
+	damage = models.PositiveIntegerField(verbose_name=_("Damage"), default=0, null=False, blank=False)
+	actions = models.PositiveIntegerField(verbose_name=_("Actions"), default=0, null=False, blank=False)
+	place_1 = models.PositiveIntegerField(verbose_name=_("First Place"), default=0, null=False, blank=False)
+	place_2 = models.PositiveIntegerField(verbose_name=_("Second Place"), default=0, null=False, blank=False)
+	place_3 = models.PositiveIntegerField(verbose_name=_("Third Place"), default=0, null=False, blank=False)
+	place_4 = models.PositiveIntegerField(verbose_name=_("Fourth Place"), default=0, null=False, blank=False)
+	experience = models.FloatField(verbose_name=_("Experience"), null=False, blank=True, default=0)
 	donate = models.PositiveIntegerField(
 		db_column='donat',
 		null=False,

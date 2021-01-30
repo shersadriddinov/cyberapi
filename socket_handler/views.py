@@ -12,6 +12,7 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 from rest_framework.decorators import api_view, permission_classes
+from django.forms.models import model_to_dict
 
 
 class NotificationView(generics.ListAPIView):
@@ -361,3 +362,44 @@ class InviteView(generics.RetrieveDestroyAPIView):
 		else:
 			return Response(data={"detail": "Sorry, this invite is not for you"}, status=status.HTTP_401_UNAUTHORIZED)
 
+
+class PlayerStats(generics.ListAPIView):
+	"""
+	Get player statistics
+	"""
+	serializer_class = PlayerStatsSerializer
+	permission_classes = (IsUserORValidServer, )
+	pagination_class = LimitOffsetPagination
+
+	def get_queryset(self):
+		return PlayerStatistic.objects.filter(user=self.request.user)
+
+	def list(self, request, *args, **kwargs):
+		PlayerStatsTuple = namedtuple('PlayerStatsTuple', ('stats',))
+		page = self.paginate_queryset(self.get_queryset())
+		if page is not None:
+			response = PlayerStatsUnrealSerializer(PlayerStatsTuple(stats=page))
+			return self.get_paginated_response(response.data)
+		response = PlayerStatsUnrealSerializer(PlayerStatsTuple(stats=self.get_queryset()))
+		return Response(response.data)
+
+
+@api_view(["POST"])
+@permission_classes([IsValidGameServer])
+def update_user_stats(request):
+	stats = PlayerStatistic.objects.create(
+		user=User.objects.get(pk=request.data.get("user")),
+		game=Server.objects.get(token=request.data.get("token")),
+		place=GameWinPlace.objects.get(place=int(request.data.get("place"))),
+		kill=int(request.data.get("kill")),
+		death=int(request.data.get("death")),
+		damage=int(request.data.get("damage")),
+		action=int(request.data.get("action"))
+	)
+	response = model_to_dict(stats)
+	response['experience'] = stats.user.profile.experience
+	response['ingame_actions'] = response.pop("action")
+	response['action'] = "stat"
+	response.pop("date")
+	send_to_socket(response)
+	return Response(data=response)
