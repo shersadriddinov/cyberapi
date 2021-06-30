@@ -38,6 +38,8 @@ ALLOWED_HOSTS = ['*']
 INSTALLED_APPS = [
 	# Custom APPS
 	'v1.apps.V1Config',
+	'socket_handler.apps.SocketHandlerConfig',
+	'store.apps.StoreConfig',
 
 	# Installed APPS
 	'rest_framework',
@@ -181,3 +183,4 @@ CACHES = {
 }
 
 CACHE_TTL = 60 * 10
+DEFAULT_SERVER_PROFILE = os.environ.get("DEFAULT_SERVER_PROFILE", "default_server")

@@ -34,3 +34,97 @@
 11-06-2020
 + `NEW` Signals: Auto add default weapon to all users
 + `UPDATE` Docs created for all models, views, signals
+
+## Release 0.0.6
+16-07-2020
++ `UPDATE` View: password while user creating now also hashes
++ `NEW` Model: added FriendList M2M model for user and his friends
++ `NEW` View: add_friend to add friend to User
++ `NEW` View: remove_friend to remove friend from User
++ `NEW` Signal: auto reverse addition of friends to each other
++ `NEW` Signal: auto reverse removing of friends from each other
++ `NEW` socket_handler app to serve socket needs
++ `NEW` Models: Notification to keep track of all notifications
++ `NEW` Admin: Notification admin
++ `NEW` View: ConnectUser to send all notifications to user just connected to the socket
++ `NEW` Permission: Check if the user connected to the socket have valid token and uuid
+
+## Release 0.0.7
+20-07-2020
++ `UPDATE` View: if user does not enter first name, he will receive "Player" + his uuid
++ `UPDATE` View: ConnectUser renamed to NotificationView, just sends all active notifications to user
++ `UPDATE` View: add_friend moved to socket_handler, add_friend sends confirm notification to web socket, renamed to confirm_friendship
++ `UPDATE` View: remove_friend moved to socket_handler
++ `NEW` Utils: send_to_socket function created to make connection to web socket and quickly send updates
++ `NEW` View: FriendNotificationView created to list all friend request on GET and to create friend request on POST enabling web socket
+
+## Release 0.0.8
+24-07-2020
++ `UPDATE` View: All list serializers formatted for Unreal Engine requirements
++ `NEW` View: Added Search View request
+
+## Release 0.0.9
+08-07-2020
++ `NEW` Model: User Weapon Configurations model with addons on certain user weapon
++ `NEW` Model: User Weapon Config on save rule to avoid adding non users addons to user config
++ `NEW` View: User configs list view
++ `NEW` View: User configs single view
++ `NEW` View: Update certain config
++ `NEW` View: Delete certain config
++ `NEW` Admin: Added Inline for `Profile & Weapon` containing user's configs for this weapon
++ `NEW` Admin: Added `User Weapon Config` view
++ `NEW` Signal: Added auto combining default addons into default weapon when user created
+
+## Release 0.0.10
+12-09-2020
++ `NEW` Signal set_new_main_character(): sets new main character and removes old one
++ `NEW` View set_default_character: to choose default character to user
++ `UPDATE` Model UserCharacter: user's main character field
++ `UPDATE` View login(): returns user's main character
++ `UPDATE` View auth(): returns 3 default characters to choose
++ `UPDATE` View UserProfile.get(): return main character if settled, default characters if False
++ `UPDATE` View UserProfile.update(): new param `main_character` for PUT request to set new main character
++ `UPDATE` Model UserWeaponConfig: character param added
+
+## Release 0.0.11
+21-09-2020
++ `UPDATE` Model Weapon: slot type added
++ `UPDATE` Admin WeaponAdmin: slot field added
++ `UPDATE` View WeaponListView: filter by slot added
++ `UPDATE` View UserConfigView: filter by slot added
+
+## Release 0.0.12
+1-10-2020
++ `NEW` Model Server: new model to keep track of game servers
++ `NEW` Model Invite: new model to keep track of invitations
++ `NEW` Admin Server: admin for server to manage game servers
++ `NEW` Admin Invite: admin for invites to manage players invitations
++ `NEW` View ServerList: to create or get the list of all game servers
++ `NEW` View ServerView: to get information about single server or update its params
++ `NEW` View InviteList: to create or get the list of user invitations or create new invitation
++ `NEW` View InviteView: to get or delete certain invite
++ `NEW` View set_default_weapon: to set one of the start weapons
++ `UPDATE` View Auth: send all available starting weapons
++ `UPDATE` Admin Weapon: start boolean field added to make weapon starting
++ `UPDATE` Model Weapon: start boolean field added to make weapon starting
+
+
+## Release 0.0.13
+22-10-2020
++ `NEW` Model Lot: new model to represent store lots
++ `NEW` Model UserLot: new model to save user purchased lots
++ `NEW` Admin LotAdmin: new admin to manage lots
++ `NEW` Admin UserLotAdmin: new admin to inspect user lots
++ `NEW` View LotList: request to list all lots
++ `NEW` View UserLotList: request to list all user lots
++ `NEW` View LotView: request to detail a lot
++ `NEW` View SearchLot: request to search for specific lot
++ `NEW` View purchase: adding lot to user routine
+
+## Release 0.0.14
++ `NEW` View assign: assign ready game server to started match
++ `NEW` View update: change server stater
++ `UPDATE` Model Server: white list to represent users allowed on server
++ `UPDATE` Signal Invite: notify game server new invite created and new user added to white list
++ `UPDATE` Model Invite: save invited user to server's white list
++ `UPDATE` Model UserLots: add all purchased items to user

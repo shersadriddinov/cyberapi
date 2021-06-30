@@ -31,8 +31,21 @@ password = {_password: example z709pa354rda_}
 <br />
 ```json
 {
-    "id": 30,
-    "token": "c1f2dfdbd89d892b7f16d9ce264bf500d72c01e0"
+    "id": 47,
+    "token": "240a9d1d7ee716c3639b93c7b86f71417a95006f",
+    "main_character": 5
+}
+```
+or if user didn't chosen main character, you will receive list of three default characters ids
+```json
+{
+    "id": 52,
+    "token": "ceeb4381c6d5733cb37e17a224dda00ed88cac9c",
+    "default_characters_list": [
+        5,
+        3,
+        2
+    ]
 }
 ```
 <br />
@@ -84,9 +97,9 @@ password
 ```json
 {
     "user": {
-        "id": 30,
-        "username": "lbadmin",
-        "first_name": "",
+        "id": 59,
+        "username": "user11",
+        "first_name": "WTF",
         "email": "sher.sadriddinov@gmail.com",
         "balance": 0,
         "donate": 0,
@@ -94,13 +107,49 @@ password
         "client_settings_json": null
     },
     "token": {
-        "key": "200a8007e8a9567cd3c37f16881021ebbe148ece"
-    }
+        "key": "4cbb482796718a489986baa093ea364ec357e26f"
+    },
+    "default_characters": [
+        {
+            "id": 5,
+            "tech_name": "President",
+            "default": true
+        },
+        {
+            "id": 3,
+            "tech_name": "CyborgRoman",
+            "default": true
+        },
+        {
+            "id": 2,
+            "tech_name": "MaleMut",
+            "default": true
+        }
+    ]
+}
+```
+
+## Add Default Character to User
+Functions one of the default characters as user's main character
+<br />
+Method: **PUT**
+<br />
+http://127.0.0.1:8000/api/user/setchar/{character id}
+<br />
+**Params**
+<br />
+character id = {_character_id_}
+<br />
+**Return**
+<br />
+```json
+{
+    "detail": "Successfully added character to user and settled as its default"
 }
 ```
 
 ## User Info, Edit, Delete
-Get, update, delete user information, depending on requests's method used. User is identified by user id passed.
+Get, update, delete user information, depending on request's method used. User is identified by user id passed.
 You cannot update user's token, balance, donate & karma with this request
 <br />
 use **GET** - to get info about user
@@ -123,14 +172,33 @@ On **DELETE** user profile moved to inactive state, data could be restored after
 <br />
 ```json
 {
-    "id": 30,
-    "username": "lbadmin",
-    "first_name": "",
+    "id": 47,
+    "username": "Obama",
+    "first_name": "Player4",
     "email": "sher.sadriddinov@gmail.com",
     "balance": 0,
     "donate": 0,
     "karma": 0,
-    "client_settings_json": null
+    "client_settings_json": null,
+    "main_character": 5
+}
+```
+or if user didn't chosen main character
+```json
+{
+    "id": 47,
+    "username": "Obama",
+    "first_name": "Player4",
+    "email": "sher.sadriddinov@gmail.com",
+    "balance": 0,
+    "donate": 0,
+    "karma": 0,
+    "client_settings_json": null,
+    "default_characters_list": [
+        5,
+        3,
+        2
+    ]
 }
 ```
 <br />
@@ -151,6 +219,7 @@ _limit_ - limit list results to certain number (optional) if not used whole list
 <br />
 _offset_ - you can use it skip some number of results you already used. (optional)
 <br />
+_user_only_ -  boolean flag (1 - True, otherwise always False) to get list of friends of the User
 **Return**
 <br />
 ```json
@@ -168,6 +237,51 @@ _offset_ - you can use it skip some number of results you already used. (optiona
             "id": 20,
             "username": "Batman",
             "email": "sher.sadriddinov@gmail.com"
+        }
+    ]
+}
+```
+
+## Search
+Returns a list containing active non-staff user's matched given query
+<br />
+http://127.0.0.1:8000/api/user/search/
+<br />
+Method: **GET**
+<br />
+**PARAMS**
+<br />
+_order_ - order of returned list, you can use `date_joined`, `username`, `last_login` or any other param. Use `-` before param (`-date_joined`) to get DESC order
+<br />
+_limit_ - limit list results to certain number (optional) if not used whole list will be returned
+<br />
+_offset_ - you can use it skip some number of results you already used. (optional)
+<br />
+_user_only_ -  boolean flag (1 - True, otherwise always False) to search in list of friends of the User
+<br />
+_query_ - the string for searching in user names
+**Return**
+<br />
+```json
+{
+    "users": [
+        {
+            "id": 49,
+            "username": "user2",
+            "first_name": "",
+            "client_settings_json": null
+        },
+        {
+            "id": 48,
+            "username": "user1",
+            "first_name": "",
+            "client_settings_json": null
+        },
+        {
+            "id": 5,
+            "username": "default_user",
+            "first_name": "",
+            "client_settings_json": null
         }
     ]
 }
@@ -276,6 +390,8 @@ http://127.0.0.1:8000/api/weapon/list/
 <br />
 _user_only_ - if set to 1, returns a list containing only user (whose token used) weapons
 <br />
+_slot_ - specifies a slot type to return, 0 - primary, 1 - secondary
+<br/>
 _order_ - order of returned list, you can use `date_created`, `tech_name` or any other param. Use `-` before param (`-date_joined`) to get DESC order
 <br />
 _limit_ - limit list results to certain number (optional) if not used whole list will be returned
@@ -383,9 +499,239 @@ http://127.0.0.1:8000/api/weapon/{id}/
 <br />
 **Return**
 <br />
+
 ```json
 {
     "detail": "Successfully removed from user weapons"
+}
+```
+
+## Notifications List
+Returns a list containing all active notifications. Use it after every connection to web socket, and each time socket sends notification
+<br />
+```json
+{
+	"action": "notification"
+}
+```
+Method: **GET**
+<br />
+http://127.0.0.1:8000/api/socket/connect/
+<br />
+**Return**
+<br />
+```json
+{
+    "id": 3,
+    "date_created": "2020-07-20T21:49:28.882307+05:00",
+    "notif_type": 1,
+    "message": null,
+    "status": true,
+    "user": 49,
+    "friend_id": 48
+}
+```
+
+## Notification Info, Edit, Delete
+Get, update, delete user notification, depending on requests's method used. Notification is identified by notification
+id passed.
+<br />
+use **GET** - to get info about notif
+<br />
+use **PUT** - to update notif status. Boolean (True or False)
+<br />
+use **DELETE** - to delete notif
+<br />
+http://127.0.0.1:8000/socket/notif/{notif id}/
+<br />
+Methods:
+<br />
+On **GET** you get notif info
+<br />
+On **PUT** you can update notif status by sending "status": False
+<br />
+On **DELETE** delete notif
+<br />
+**Return**
+<br />
+```json
+{
+    "id": 3,
+    "user": {
+        "id": 49,
+        "first_name": ""
+    },
+    "friend_id": {
+        "id": 48,
+        "first_name": ""
+    },
+    "date_created": "2020-07-20T21:49:28.882307+05:00",
+    "notif_type": 1,
+    "message": null,
+    "status": true
+}
+```
+<br />
+
+## Friend Requests
+Get list of your friend requests or make friend request
+<br/>
+Methods:
+<br/>
+On **GET** you will receive list of friend requests
+<br/>
+On **POST** you will create a friend request
+<br/>
+```json
+{
+	"friend": 48
+}
+```
+http://127.0.0.1:8000/api/socket/friend/request/
+<br />
+**Return**
+<br />
+```json
+{
+	"id": 3,
+	"date_created": "2020-07-20T21:49:28.882307+05:00",
+	"notif_type": 1,
+	"message": null,
+	"status": true,
+	"user": 49,
+	"friend_id": 48
+}
+```
+
+## Add Friend
+Function to confirm friend request
+<br />
+Method: **PUT**
+<br />
+http://127.0.0.1:8000/api/friend/add/{user_id}/
+<br />
+**PARAM**
+<br />
+confirm - boolean (1 - True, 0 -False) to add friend or ignore
+<br />
+**Return**
+<br />
+```json
+{
+	"detail": "User added to friends list"
+}
+```
+
+## Remove Friend
+Function to remove someone from your friend list
+<br />
+Method: **PUT**
+<br />
+http://127.0.0.1:8000/api/friend/remove/{user_id}/
+<br />
+**Return**
+<br />
+```json
+{
+	"detail": "User removed from friends list"
+}
+```
+
+## Configuration Info, Edit, Delete
+Get, update, delete user weapon configuration, depending on request's method used. Config is identified by config's
+id passed. Character could be `null`
+<br />
+use **GET** - to get info about config
+<br />
+use **PUT** - to update config status. Boolean (True or False)
+<br />
+use **DELETE** - to delete config
+<br />
+http://127.0.0.1:8000/api/user/config/{config id}/
+<br />
+Methods:
+<br />
+On **GET** you get config info
+<br />
+On **PUT** you can update config
+<br />
+On **DELETE** delete config
+<br />
+**Return**
+<br />
+```json
+{
+    "id": 2,
+    "date_created": "2020-08-07T01:45:02.477335+05:00",
+    "weapon": 19,
+    "character": 5,
+    "stock": 1,
+    "barrel": 1,
+    "muzzle": 2,
+    "mag": 1,
+    "scope": 1,
+    "grip": 1
+}
+```
+<br />
+
+## Configs Lists
+Get list of your weapon configs or create user weapon config. Character could be `null`
+<br/>
+Methods:
+<br/>
+On **GET** you will receive list of your weapon config
+<br />
+**PARAMS**
+<br />
+_slot_ - specifies a slot type to return, 0 - primary, 1 - secondary
+<br/>
+On **POST** you will create config for your weapon
+<br/>
+```json
+{
+    "weapon": 19,
+    "character": 5,
+    "stock": 1,
+    "barrel": 1,
+    "muzzle": 1,
+    "mag": 1,
+    "grip": 1,
+    "scope": 1
+}
+```
+http://127.0.0.1:8000/api/user/config/list/
+<br />
+**Return**
+<br />
+```json
+{
+    "configs": [
+        {
+            "id": 2,
+            "date_created": "2020-08-07T01:45:02.477335+05:00",
+            "weapon": 19,
+            "character": 5,
+            "stock": 1,
+            "barrel": 1,
+            "muzzle": 2,
+            "mag": 1,
+            "scope": 1,
+            "grip": 1
+        },
+        {
+            "id": 3,
+            "date_created": "2020-08-08T19:15:28.842685+05:00",
+            "weapon": 19,
+            "character": 5,
+            "stock": 1,
+            "barrel": 1,
+            "muzzle": 1,
+            "mag": 1,
+            "scope": 1,
+            "grip": 1
+        }
+    ]
 }
 ```
 

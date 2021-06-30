@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import User
+from django.core.validators import ValidationError
 from rest_framework.authtoken.models import Token
 
 
@@ -59,11 +60,31 @@ class Character(PlayItem):
 	def __str__(self):
 		return self.tech_name
 
+	def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+		if self.default and Character.objects.filter(default=True).count() > 2:
+			raise ValidationError(_("More than 3 default characters, remove one before proceeding"))
+		else:
+			super(Character, self).save(force_insert, force_update, using, update_fields)
+
+
+SLOTS = (
+	(0, _("primary")),
+	(1, _("secondary"))
+)
+
 
 class Weapon(PlayItem):
 	"""
 	All weapons available in game, inherits from :model:`PlayItem`
 	"""
+	slot = models.PositiveSmallIntegerField(verbose_name=_("Slot"), choices=SLOTS, default=0, blank=False)
+	start = models.BooleanField(
+		db_column='start',
+		default=False,
+		blank=True,
+		verbose_name=_("Start weapon"),
+		help_text=_("This weapon can be used from start")
+	)
 
 	class Meta:
 		db_table = "weapon"
@@ -179,6 +200,13 @@ class Profile(models.Model):
 	Information about user, works in one to one link with default :model:`User`
 	"""	
 	user = models.OneToOneField(User, on_delete=models.CASCADE)
+	friends = models.ManyToManyField(
+		"Profile",
+		verbose_name=_("Friends"),
+		blank=True,
+		related_name="friend_list",
+		through="FriendsList",
+	)
 	balance = models.PositiveIntegerField(
 		db_column='balance',
 		null=False,
@@ -187,8 +215,17 @@ class Profile(models.Model):
 		help_text=_('Coins earned by playing'),
 		verbose_name=_("Game Balance"),
 	)
+	killed = models.PositiveIntegerField(verbose_name=_("Killed"), default=0, null=False, blank=False)
+	died = models.PositiveIntegerField(verbose_name=_("Died"), default=0, null=False, blank=False)
+	damage = models.PositiveIntegerField(verbose_name=_("Damage"), default=0, null=False, blank=False)
+	actions = models.PositiveIntegerField(verbose_name=_("Actions"), default=0, null=False, blank=False)
+	place_1 = models.PositiveIntegerField(verbose_name=_("First Place"), default=0, null=False, blank=False)
+	place_2 = models.PositiveIntegerField(verbose_name=_("Second Place"), default=0, null=False, blank=False)
+	place_3 = models.PositiveIntegerField(verbose_name=_("Third Place"), default=0, null=False, blank=False)
+	place_4 = models.PositiveIntegerField(verbose_name=_("Fourth Place"), default=0, null=False, blank=False)
+	experience = models.FloatField(verbose_name=_("Experience"), null=False, blank=True, default=0)
 	donate = models.PositiveIntegerField(
-		db_column='column',
+		db_column='donat',
 		null=False,
 		default=0,
 		blank=True,
@@ -223,6 +260,27 @@ class Profile(models.Model):
 		related_name="profile_weapon",
 		through="UserWeapon"
 	)
+	lots = models.ManyToManyField(
+		'store.Lot',
+		blank=True,
+		verbose_name=_("User purchased lots"),
+		related_name="profile_lot",
+		through="store.UserLots"
+	)
+	battle_pass = models.ManyToManyField(
+		"store.BattlePass",
+		blank=True,
+		verbose_name=_("User Battle Pass"),
+		related_name="profile_battle_pass",
+		through="store.UserBattlePass"
+	)
+	user_tasks = models.ManyToManyField(
+		"store.Task",
+		blank=True,
+		verbose_name=_("User Tasks"),
+		related_name="profile_tasks",
+		through="store.UserTask"
+	)
 
 	class Meta:
 		db_table = 'profile'
@@ -231,6 +289,41 @@ class Profile(models.Model):
 
 	def __str__(self):
 		return self.user.username
+
+
+class FriendsList(models.Model):
+	"""
+	ManyToMany model for :model:`Profile` and :model:`Profile` to make friends & clans behaviour with some additional
+	info, represents all friends of user and their clan
+	"""
+	profile = models.ForeignKey(Profile, on_delete=models.CASCADE, verbose_name=_("User"), related_name="profile")
+	friend = models.ForeignKey(Profile, on_delete=models.CASCADE, verbose_name=_("Friend"), related_name="friend")
+	date_added = models.DateTimeField(verbose_name=_("Date Added"), default=timezone.now)
+	matches_played = models.PositiveIntegerField(verbose_name=_("In teams plays count"), default=0, blank=True)
+
+	class Meta:
+		db_table = "friends_list"
+		verbose_name = _("Friends List")
+		verbose_name_plural = _("Friends List")
+		ordering = ("-date_added", )
+		unique_together = ('profile', 'friend')
+
+	@classmethod
+	def add_friend(cls, profile, friend):
+		connection, created = FriendsList.objects.get_or_create(profile=profile, friend=friend)
+		reverse_connection, reverse_created = FriendsList.objects.get_or_create(profile=friend, friend=profile)
+		return created
+
+	@classmethod
+	def remove_friend(cls, profile, friend):
+		connection, created = FriendsList.objects.get_or_create(profile=profile, friend=friend)
+		connection.delete() if not created else False
+		reverse_connection, reverse_created = FriendsList.objects.get_or_create(profile=friend, friend=profile)
+		reverse_connection.delete() if not reverse_created else False
+		return not created
+
+	def __str__(self):
+		return str(self.profile)
 
 
 class UserCharacter(models.Model):
@@ -243,6 +336,7 @@ class UserCharacter(models.Model):
 	date_added = models.DateTimeField(verbose_name=_("Date Added"), default=timezone.now)
 
 	class Meta:
+		unique_together = ('profile', 'character')
 		db_table = "profile_character"
 		verbose_name = _("User & Character")
 		verbose_name_plural = _("Users & Characters")
@@ -319,6 +413,7 @@ class UserWeapon(models.Model):
 	date_added = models.DateTimeField(verbose_name=_("Date Added"), default=timezone.now)
 	user_addon_stock = ArrayField(
 		models.PositiveIntegerField(blank=True),
+		default=list,
 		null=True,
 		blank=True,
 		verbose_name=_('User Stock Addons'),
@@ -326,6 +421,7 @@ class UserWeapon(models.Model):
 	)
 	user_addon_barrel = ArrayField(
 		models.PositiveIntegerField(blank=True),
+		default=list,
 		null=True,
 		blank=True,
 		verbose_name=_('User Barrel Addons'),
@@ -333,6 +429,7 @@ class UserWeapon(models.Model):
 	)
 	user_addon_muzzle = ArrayField(
 		models.PositiveIntegerField(blank=True),
+		default=list,
 		null=True,
 		blank=True,
 		verbose_name=_('User Stock Muzzle'),
@@ -340,6 +437,7 @@ class UserWeapon(models.Model):
 	)
 	user_addon_mag = ArrayField(
 		models.PositiveIntegerField(blank=True),
+		default=list,
 		null=True,
 		blank=True,
 		verbose_name=_('User Mag Addons'),
@@ -347,6 +445,7 @@ class UserWeapon(models.Model):
 	)
 	user_addon_scope = ArrayField(
 		models.PositiveIntegerField(blank=True),
+		default=list,
 		null=True,
 		blank=True,
 		verbose_name=_('User Scope Addons'),
@@ -354,6 +453,7 @@ class UserWeapon(models.Model):
 	)
 	user_addon_grip = ArrayField(
 		models.PositiveIntegerField(blank=True),
+		default=list,
 		null=True,
 		blank=True,
 		verbose_name=_('User Grip Addons'),
@@ -362,9 +462,101 @@ class UserWeapon(models.Model):
 
 	class Meta:
 		db_table = "profile_weapon"
+		unique_together = ("profile", "weapon_with_addons")
 		verbose_name = _("Profile & Weapon")
 		verbose_name_plural = _("Profile & Weapon")
 		ordering = ("-date_added", )
 
 	def __str__(self):
 		return self.profile.user.username + " with " + self.weapon_with_addons.weapon.tech_name
+
+
+	def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+		if not self.pk:
+			self.user_addon_stock = list(self.weapon_with_addons.stock.filter(default=True, hidden=False).values_list('id', flat=True))
+			self.user_addon_barrel = list(self.weapon_with_addons.barrel.filter(default=True, hidden=False).values_list('id', flat=True))
+			self.user_addon_muzzle = list(self.weapon_with_addons.muzzle.filter(default=True, hidden=False).values_list('id', flat=True))
+			self.user_addon_mag = list(self.weapon_with_addons.mag.filter(default=True, hidden=False).values_list('id', flat=True))
+			self.user_addon_scope = list(self.weapon_with_addons.scope.filter(default=True, hidden=False).values_list('id', flat=True))
+			self.user_addon_grip = list(self.weapon_with_addons.grip.filter(default=True, hidden=False).values_list('id', flat=True))
+		super(UserWeapon, self).save(force_insert, force_update, using, update_fields)
+
+
+class WeaponConfig(models.Model):
+	"""
+	Many to Many to create user configs for weapons
+	"""
+	weapon = models.ForeignKey(UserWeapon, on_delete=models.CASCADE, verbose_name=_("User Weapon"), null=False, blank=False)
+	stock = models.ForeignKey(Stock, on_delete=models.SET_NULL, verbose_name=_("Stock"), null=True)
+	barrel = models.ForeignKey(Barrel, on_delete=models.SET_NULL, verbose_name=_("Barrel"), null=True)
+	muzzle = models.ForeignKey(Muzzle, on_delete=models.SET_NULL, verbose_name=_("Muzzle"), null=True)
+	mag = models.ForeignKey(Mag, on_delete=models.SET_NULL, verbose_name=_("Magazine"), null=True)
+	scope = models.ForeignKey(Scope, on_delete=models.SET_NULL, verbose_name=_("Scope"), null=True)
+	grip = models.ForeignKey(Grip, on_delete=models.SET_NULL, verbose_name=_("Grip"), null=True)
+
+	class Meta:
+		db_table = "weapon_config"
+		verbose_name = _("Weapons Configuration")
+		verbose_name_plural = _("Weapons Configurations")
+
+	def __str__(self):
+		return self.weapon.profile.user.username + "with config for " + self.weapon.weapon_with_addons.weapon.tech_name
+
+	def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+		flag = True
+
+		if self.stock is not None and self.stock.pk not in self.weapon.user_addon_stock:
+			flag = False
+		elif self.barrel is not None and self.barrel.pk not in self.weapon.user_addon_barrel:
+			flag = False
+		elif self.muzzle is not None and self.muzzle.pk not in self.weapon.user_addon_muzzle:
+			flag = False
+		elif self.mag is not None and self.mag.pk not in self.weapon.user_addon_mag:
+			flag = False
+		elif self.scope is not None and self.scope.pk not in self.weapon.user_addon_scope:
+			flag = False
+		elif self.grip is not None and self.grip.pk not in self.weapon.user_addon_grip:
+			flag = False
+
+		if flag:
+			super(WeaponConfig, self).save(force_insert, force_update, using, update_fields)
+		else:
+			raise Exception("Trying to add addon that does not belong to user")
+
+
+class UserWeaponConfig(models.Model):
+	"""
+	Many to Many model for :model:`UserWeapon` and to addons. Represents User's Weapon with its addons combinations
+	defined by user
+	"""
+	profile = models.ForeignKey(Profile, on_delete=models.CASCADE, verbose_name=_("User Profile"), null=False, blank=False)
+	character = models.ForeignKey(Character, on_delete=models.CASCADE, verbose_name=_("User Character"), null=True, blank=True)
+	current = models.BooleanField(verbose_name=_("Current Config for its slot"), default=False)
+	date_created = models.DateTimeField(verbose_name=_("Date Created"), default=timezone.now)
+	primary = models.ForeignKey(WeaponConfig, on_delete=models.CASCADE, verbose_name=_("Primary Weapon"), null=True, blank=True, related_name="primary")
+	secondary = models.ForeignKey(WeaponConfig, on_delete=models.CASCADE, verbose_name=_("Secondary Weapon"), null=True, blank=True, related_name="secondary")
+
+	class Meta:
+		db_table = "profile_weapon_config"
+		unique_together = ('character', 'profile', 'primary', 'secondary')
+		verbose_name = _("User Weapons Configuration")
+		verbose_name_plural = _("User Weapons Configuration")
+		ordering = ("-date_created", )
+
+	def __str__(self):
+		return self.profile.user.username + " config " + str(self.id)
+
+	def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+		flag = True
+
+		if not UserCharacter.objects.filter(profile=self.profile, character=self.character):
+			flag = False
+		elif self.primary is not None and self.profile != self.primary.weapon.profile:
+			flag = False
+		elif self.secondary is not None and self.profile != self.secondary.weapon.profile:
+			flag = False
+
+		if flag:
+			super(UserWeaponConfig, self).save(force_insert, force_update, using, update_fields)
+		else:
+			raise Exception("Problem with some item in config")
